@@ -1160,10 +1160,22 @@ async function onlineEndTurn(){
 }
 async function startOnlineGame(){
  if(!onlineRoomCode)return;
- const ref=rtdb.ref('rooms/'+onlineRoomCode),snap=await ref.once('value'),room=snap.val();
- if(room&&room.host===onlinePlayerId)const arr=orderedOnlinePlayers(room);
- gameCount=arr.length;gameMode='friend';reset();P.forEach((p,i)=>p.name=arr[i]?.[1]?.name||p.name);
- await ref.update({status:'playing',turnIndex:0,turnSeq:0,game:packOnlineGame(),startedAt:firebase.database.ServerValue.TIMESTAMP});
+ const ref=rtdb.ref('rooms/'+onlineRoomCode);
+ const snap=await ref.once('value');
+ const room=snap.val();
+ if(!room || room.host!==onlinePlayerId)return;
+ const arr=orderedOnlinePlayers(room);
+ gameCount=arr.length;
+ gameMode='friend';
+ reset();
+ P.forEach((p,i)=>p.name=arr[i]?.[1]?.name||p.name);
+ await ref.update({
+   status:'playing',
+   turnIndex:0,
+   turnSeq:0,
+   game:packOnlineGame(),
+   startedAt:firebase.database.ServerValue.TIMESTAMP
+ });
 }
 </script>
 
@@ -1194,7 +1206,10 @@ window.addEventListener('load',()=>{
    try{
      await joinOnlineRoom(code);screen('waitingRoom');
      if(msg)msg.textContent='방 참가 완료';
-   }catch(err){if(msg)msg.textContent=err.message}
+   }catch(err){
+     if(msg)msg.textContent='참가 실패: '+err.message;
+     alert('방 참가 실패: '+err.message);
+   }
  };
  const start=document.getElementById('startRoom');
  if(start)start.onclick=startOnlineGame;
