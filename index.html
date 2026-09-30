@@ -376,7 +376,7 @@
 .key-guide-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
 .key-guide-list span{background:#10212d;border:1px solid #263d4d;border-radius:7px;padding:7px 6px}
 .key-guide-foot{margin-top:12px;color:#8fa6b6;font-size:10px;line-height:1.5}
-</style></head>
+.room-slot:not(.empty){border-color:#2f7b60;background:#102d27}.room-slot:not(.empty) span:last-child{color:#67d7a4;font-weight:800}.start-room:not(:disabled){background:#16885d!important;color:#fff!important}</style></head>
 <body>
 <div id="lobby" class="lobby-screen">
   <div class="lobby-shell">
@@ -407,7 +407,7 @@
     <div class="room-code-box"><span>방 코드</span><b id="roomCode">------</b><button id="copyCode">코드 복사</button></div>
     <div id="roomSlots" class="room-slots"></div>
     <button class="start-room" id="startRoom" disabled>친구를 기다리는 중...</button>
-    <div class="lobby-note">현재 버전은 로비 UI 단계입니다. 실제 다른 기기 초대/동기화는 서버 연결 후 작동합니다.</div>
+    <div class="lobby-note">친구가 방 코드로 참가하면 이곳에 실시간 표시됩니다. 새로고침해도 방에 유지됩니다.</div>
   </div>
 </div>
 <div id="joinRoom" class="lobby-screen hidden">
@@ -418,7 +418,7 @@
       <input id="joinCode" maxlength="6" autocomplete="off" placeholder="방 코드 6자리">
       <button id="joinSubmit">참가하기</button>
     </div>
-    <div id="joinMessage" class="lobby-note">실제 방 검색/입장은 멀티 서버 연결 후 작동합니다.</div>
+    <div id="joinMessage" class="lobby-note">6자리 방 코드를 입력하면 친구 방에 참가합니다.</div>
   </div>
 </div>
 <div id="aiSetup" class="lobby-screen hidden">
@@ -985,8 +985,8 @@ const rtdb=firebase.database();
 let onlineRoomCode=null, onlinePlayerId=null, onlineRoomListener=null;
 
 function makePlayerId(){
- let id=sessionStorage.getItem('wtPlayerId');
- if(!id){id='p_'+Math.random().toString(36).slice(2,10);sessionStorage.setItem('wtPlayerId',id)}
+ let id=localStorage.getItem('wtPlayerId');
+ if(!id){id='p_'+Math.random().toString(36).slice(2,10);localStorage.setItem('wtPlayerId',id)}
  return id;
 }
 function makeRoomCode(){return Math.random().toString(36).slice(2,8).toUpperCase()}
@@ -1005,7 +1005,8 @@ async function createOnlineRoom(maxPlayers){
    createdAt:firebase.database.ServerValue.TIMESTAMP,
    players:{[onlinePlayerId]:{name:'나',joinedAt:firebase.database.ServerValue.TIMESTAMP}}
  });
- rtdb.ref(`rooms/${code}/players/${onlinePlayerId}`).onDisconnect().remove();
+
+ localStorage.setItem('wtOnlineRoom',code);localStorage.setItem('wtOnlineRole','host');
  watchOnlineRoom(code);
  return code;
 }
@@ -1019,7 +1020,8 @@ async function joinOnlineRoom(code){
  if(players.length>=room.maxPlayers)throw new Error('방이 가득 찼습니다.');
  onlinePlayerId=makePlayerId();onlineRoomCode=code;
  await ref.child('players/'+onlinePlayerId).set({name:onlineName(),joinedAt:firebase.database.ServerValue.TIMESTAMP});
- ref.child('players/'+onlinePlayerId).onDisconnect().remove();
+
+ localStorage.setItem('wtOnlineRoom',code);localStorage.setItem('wtOnlineRole','guest');
  watchOnlineRoom(code);return room;
 }
 function watchOnlineRoom(code){
@@ -1029,23 +1031,24 @@ function watchOnlineRoom(code){
    if(!snap.exists()){screen('lobby');return}
    const room=snap.val(),entries=Object.entries(room.players||{});
    const codeEl=document.getElementById('roomCode');if(codeEl)codeEl.textContent=code;
-   const slots=document.getElementById('playerSlots');
+   const ct=document.getElementById('roomCountText');if(ct)ct.textContent=`${room.maxPlayers}인 친구 대전 · ${entries.length} / ${room.maxPlayers}명`;
+   const slots=document.getElementById('roomSlots');
    if(slots){
      slots.innerHTML='';
      for(let i=0;i<room.maxPlayers;i++){
        const row=document.createElement('div');row.className='player-slot';
        if(entries[i]){
          const [id,p]=entries[i];
-         row.innerHTML=`<span>${id===room.host?'👑':'👤'}</span><b>${id===onlinePlayerId?'나':(p.name||'플레이어')}</b>`;
-       }else row.innerHTML='<span>＋</span><b>친구를 기다리는 중...</b>';
+         row.className='room-slot';row.innerHTML=`<span>${id===room.host?'👑 ': '👤 '}${id===onlinePlayerId?'나':(p.name||'플레이어')}</span><span>${id===room.host?'방장':'접속 중'}</span>`;
+       }else{row.className='room-slot empty';row.innerHTML='<span>빈 자리</span><span>친구 대기 중</span>';}
        slots.appendChild(row);
      }
    }
-   const start=document.getElementById('startFriend');
+   const start=document.getElementById('startRoom');
    if(start){
      const host=room.host===onlinePlayerId;
-     start.disabled=!host||entries.length<2;
-     start.textContent=host?(entries.length<2?'친구를 기다리는 중...':'게임 시작'):'방장이 시작하기를 기다리는 중...';
+     start.disabled=!host||entries.length<room.maxPlayers;
+     start.textContent=host?(entries.length<room.maxPlayers?`친구를 기다리는 중... (${entries.length}/${room.maxPlayers})`:'게임 시작'):'방장이 시작하기를 기다리는 중...';
    }
    if(room.status==='playing'){
      gameMode='friend';gameCount=entries.length;
@@ -1053,6 +1056,28 @@ function watchOnlineRoom(code){
    }
  });
 }
+
+async function leaveOnlineRoom(){
+ const code=onlineRoomCode||localStorage.getItem('wtOnlineRoom'),id=onlinePlayerId||makePlayerId();
+ if(code){
+  const snap=await rtdb.ref('rooms/'+code).once('value'),room=snap.val();
+  if(room){if(room.host===id)await rtdb.ref('rooms/'+code).remove();else await rtdb.ref(`rooms/${code}/players/${id}`).remove();}
+ }
+ localStorage.removeItem('wtOnlineRoom');localStorage.removeItem('wtOnlineRole');onlineRoomCode=null;screen('lobby');
+}
+async function restoreOnlineRoom(){
+ const code=localStorage.getItem('wtOnlineRoom');if(!code)return;
+ const id=makePlayerId(),snap=await rtdb.ref('rooms/'+code).once('value');
+ if(!snap.exists()){localStorage.removeItem('wtOnlineRoom');localStorage.removeItem('wtOnlineRole');return}
+ const room=snap.val();
+ if(!room.players||!room.players[id]){
+  const count=Object.keys(room.players||{}).length;
+  if(count>=room.maxPlayers){localStorage.removeItem('wtOnlineRoom');return}
+  await rtdb.ref(`rooms/${code}/players/${id}`).set({name:localStorage.getItem('wtOnlineRole')==='host'?'나':onlineName(),joinedAt:firebase.database.ServerValue.TIMESTAMP});
+ }
+ onlinePlayerId=id;onlineRoomCode=code;screen('waitingRoom');watchOnlineRoom(code);
+}
+
 async function startOnlineGame(){
  if(!onlineRoomCode)return;
  const ref=rtdb.ref('rooms/'+onlineRoomCode),snap=await ref.once('value'),room=snap.val();
@@ -1063,6 +1088,8 @@ async function startOnlineGame(){
 
 <script>
 window.addEventListener('load',()=>{
+ restoreOnlineRoom();
+ const wb=document.getElementById('waitingBack');if(wb)wb.onclick=leaveOnlineRoom;
  const oldRoom=document.getElementById('openRoom');
  if(oldRoom) oldRoom.onclick=()=>screen('roomSetup');
 
@@ -1087,7 +1114,7 @@ window.addEventListener('load',()=>{
      if(msg)msg.textContent='방 참가 완료';
    }catch(err){if(msg)msg.textContent=err.message}
  };
- const start=document.getElementById('startFriend');
+ const start=document.getElementById('startRoom');
  if(start)start.onclick=startOnlineGame;
 });
 </script>
