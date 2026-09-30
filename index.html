@@ -954,6 +954,12 @@ document.getElementById('keyInfo').onclick=()=>{
  a.appendChild(ok);document.getElementById('modal').classList.add('show');
 };
 
+document.getElementById('exitGame').addEventListener('click',async e=>{
+ if(gameMode==='friend'&&onlineRoomCode){
+   e.preventDefault();e.stopImmediatePropagation();
+   if(confirm('게임에서 나갈까요?')){document.body.classList.remove('friend-online');document.getElementById('onlineTurnBanner').style.display='none';await leaveOnlineRoom();}
+ }
+},true);
 document.getElementById('exitGame').onclick=exitAIGame;
 
 
@@ -1055,6 +1061,10 @@ function watchOnlineRoom(code){
      start.textContent=host?(entries.length<room.maxPlayers?`친구를 기다리는 중... (${entries.length}/${room.maxPlayers})`:'게임 시작'):'방장이 시작하기를 기다리는 중...';
    }
    if(room.status==='playing'){
+     if(!room.players || !room.players[onlinePlayerId]){
+       localStorage.removeItem('wtOnlineRoom');localStorage.removeItem('wtOnlineRole');
+       return;
+     }
      gameMode='friend';gameCount=entries.length;
      if(!document.body.classList.contains('friend-online')){
        screen('gameApp');reset();document.body.classList.add('friend-online');
@@ -1166,6 +1176,7 @@ window.addEventListener('load',()=>{
 
 <div id="onlineTurnBanner" class="turn-banner" style="display:none"></div>
 
+<script>
 window.addEventListener('load',()=>{
  const rb=document.getElementById('roll');
  if(rb)rb.addEventListener('click',async e=>{
@@ -1181,5 +1192,6 @@ window.addEventListener('load',()=>{
    await onlineEndTurn();
  },true);
 });
+</script>
 
 </body></html>
