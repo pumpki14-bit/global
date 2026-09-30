@@ -550,7 +550,7 @@ function ui(){
  document.getElementById('roll').disabled=!h||rolled;
  document.getElementById('buy').disabled=!(h&&rolled&&(t.type==='CITY'||t.type==='SPECIAL')&&t.owner<0&&p.money>=t.price);
  document.getElementById('end').disabled=!(h&&rolled);
- document.getElementById('sellLand').disabled=!(h&&data.some(x=>x.owner===0));
+ document.getElementById('sellLand').disabled=!(h&&data.some(x=>x.owner===localIdx));
  players();draw();
 }
 const wait=m=>new Promise(r=>setTimeout(r,Math.max(8,m/(gameMode==='ai'?gameSpeed:1))));
@@ -668,7 +668,9 @@ function aiWorldTravel(fromCard=false){
 
 function offerTollPayment(t,x){
  return new Promise(resolve=>{
-   const owner=P[t.owner];
+   const payerIndex=turn;
+   const ownerIndex=t.owner;
+   const payer=P[payerIndex],owner=P[ownerIndex];
    document.getElementById('mh').textContent='💸 통행료 지불';
    document.getElementById('mb').innerHTML=`
     <div class="toll-pay-box">
@@ -676,20 +678,25 @@ function offerTollPayment(t,x){
       <div class="toll-pay-state">${t.type==='CITY'?['대지','별장 1채','별장 2채','빌딩','호텔'][t.bld]:'특수 땅'}</div>
       <div class="toll-pay-label">내야 하는 통행료</div>
       <div class="toll-pay-amount">${won(x)}</div>
-      <div class="toll-pay-money">내 보유금액 ${won(P[0].money)}</div>
+      <div class="toll-pay-money">내 보유금액 ${won(payer.money)}</div>
     </div>`;
    const a=document.getElementById('ma');a.innerHTML='';
    const pay=document.createElement('button');
    pay.className='toll-pay-btn';
    pay.textContent=`${won(x)} 지불`;
-   pay.onclick=()=>{
-     P[0].money-=x;
-     owner.money+=Math.max(0,x);
-     log(`나 → ${owner.name} 통행료 ${won(x)} 지불`);
+   pay.onclick=async()=>{
+     // 온라인에서는 P[0]이 아니라 현재 턴 플레이어가 실제 지불자다.
+     P[payerIndex].money-=x;
+     P[ownerIndex].money+=x;
+     log(`${P[payerIndex].name} → ${P[ownerIndex].name} 통행료 ${won(x)} 지불`);
      document.getElementById('modal').classList.remove('show');
      status(`${t.name} 통행료 ${won(x)} 지불 완료`);
      ui();
-     bankrupt(0);
+     bankrupt(payerIndex);
+     // 돈 이동까지 서버에 저장해야 상대 화면에서도 즉시 같은 금액으로 보인다.
+     if(gameMode==='friend') await pushOnlineGame({lastPayment:{
+       from:payerIndex,to:ownerIndex,amount:x,land:t.name,at:Date.now()
+     }});
      resolve();
    };
    a.appendChild(pay);
@@ -697,8 +704,9 @@ function offerTollPayment(t,x){
  });
 }
 function offerBuy(t){
- if(over||turn!==0||t.owner>=0) return;
- const p=P[0];
+ const me=(gameMode==='friend')?onlinePlayerIndexFromCurrent():0;
+ if(over||turn!==me||t.owner>=0) return;
+ const p=P[me];
  document.getElementById('mh').textContent=t.name;
  document.getElementById('mb').innerHTML=`<b>${won(t.price)}</b><br><br>이 땅을 구매할까요?<br><span style="font-size:11px;color:#8fa4b4">보유금액 ${won(p.money)}</span>`;
  const a=document.getElementById('ma');a.innerHTML='';
@@ -721,7 +729,8 @@ function offerBuy(t){
  document.getElementById('modal').classList.add('show');
 }
 function offerBuild(t){
- if(over || turn!==0 || t.owner!==0 || P[0].laps<=t.purchasedLap || t.bld>=4) return;
+ const me=(gameMode==='friend')?onlinePlayerIndexFromCurrent():0;
+ if(over || turn!==me || t.owner!==me || P[me].laps<=t.purchasedLap || t.bld>=4) return;
  const next=t.bld+1;
  const names=['','별장 1채','별장 2채','빌딩','호텔'];
  const price=cost(t,next);
