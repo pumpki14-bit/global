@@ -376,7 +376,11 @@
 .key-guide-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
 .key-guide-list span{background:#10212d;border:1px solid #263d4d;border-radius:7px;padding:7px 6px}
 .key-guide-foot{margin-top:12px;color:#8fa6b6;font-size:10px;line-height:1.5}
-.room-slot:not(.empty){border-color:#2f7b60;background:#102d27}.room-slot:not(.empty) span:last-child{color:#67d7a4;font-weight:800}.start-room:not(:disabled){background:#16885d!important;color:#fff!important}</style></head>
+.room-slot:not(.empty){border-color:#2f7b60;background:#102d27}.room-slot:not(.empty) span:last-child{color:#67d7a4;font-weight:800}.start-room:not(:disabled){background:#16885d!important;color:#fff!important}
+body.friend-online #autoPlay,body.friend-online #gameSpeed{display:none!important}
+.turn-banner{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:80;padding:8px 16px;border-radius:999px;background:#102a3a;border:1px solid #35627a;color:#fff;font-weight:900;font-size:12px;box-shadow:0 5px 20px #0008}
+.turn-banner.mine{background:#12462f;border-color:#2e9c67}
+</style></head>
 <body>
 <div id="lobby" class="lobby-screen">
   <div class="lobby-shell">
@@ -1002,7 +1006,7 @@ async function createOnlineRoom(maxPlayers){
  onlineRoomCode=code;
  await rtdb.ref('rooms/'+code).set({
    host:onlinePlayerId,maxPlayers:Number(maxPlayers)||4,status:'waiting',
-   createdAt:firebase.database.ServerValue.TIMESTAMP,
+   createdAt:firebase.database.ServerValue.TIMESTAMP,turnIndex:0,turnSeq:0,
    players:{[onlinePlayerId]:{name:'나',joinedAt:firebase.database.ServerValue.TIMESTAMP}}
  });
 
@@ -1052,7 +1056,10 @@ function watchOnlineRoom(code){
    }
    if(room.status==='playing'){
      gameMode='friend';gameCount=entries.length;
-     screen('gameApp');reset();
+     if(!document.body.classList.contains('friend-online')){
+       screen('gameApp');reset();document.body.classList.add('friend-online');
+     }
+     applyOnlineTurn(room);
    }
  });
 }
@@ -1078,10 +1085,48 @@ async function restoreOnlineRoom(){
  onlinePlayerId=id;onlineRoomCode=code;screen('waitingRoom');watchOnlineRoom(code);
 }
 
+
+function orderedOnlinePlayers(room){
+ return Object.entries(room.players||{}).sort((a,b)=>(a[1].joinedAt||0)-(b[1].joinedAt||0));
+}
+function applyOnlineTurn(room){
+ if(room.status!=='playing')return;
+ const arr=orderedOnlinePlayers(room);
+ if(!arr.length)return;
+ const idx=(room.turnIndex||0)%arr.length;
+ const currentId=arr[idx][0],mine=currentId===onlinePlayerId;
+ const banner=document.getElementById('onlineTurnBanner');
+ if(banner){
+   banner.style.display='block';banner.classList.toggle('mine',mine);
+   banner.textContent=mine?'🎲 내 차례입니다':`⏳ ${arr[idx][1].name||'상대'} 차례입니다`;
+ }
+ document.body.classList.add('friend-online');
+ // Friend online mode never uses autoplay/speed.
+ autoPlay=false;
+ const rollBtn=document.getElementById('roll');
+ if(rollBtn)rollBtn.disabled=!mine||rolled||over;
+ const endBtn=document.getElementById('end');
+ if(endBtn)endBtn.disabled=!mine||!rolled||over;
+}
+async function onlineEndTurn(){
+ if(gameMode!=='friend'||!onlineRoomCode)return false;
+ const ref=rtdb.ref('rooms/'+onlineRoomCode);
+ await ref.transaction(room=>{
+   if(!room||room.status!=='playing')return room;
+   const arr=Object.entries(room.players||{}).sort((a,b)=>(a[1].joinedAt||0)-(b[1].joinedAt||0));
+   if(!arr.length)return room;
+   const idx=(room.turnIndex||0)%arr.length;
+   if(arr[idx][0]!==onlinePlayerId)return; // not your turn: abort
+   room.turnIndex=(idx+1)%arr.length;room.turnSeq=(room.turnSeq||0)+1;
+   return room;
+ });
+ return true;
+}
+
 async function startOnlineGame(){
  if(!onlineRoomCode)return;
  const ref=rtdb.ref('rooms/'+onlineRoomCode),snap=await ref.once('value'),room=snap.val();
- if(room&&room.host===onlinePlayerId)await ref.update({status:'playing',startedAt:firebase.database.ServerValue.TIMESTAMP});
+ if(room&&room.host===onlinePlayerId)await ref.update({status:'playing',turnIndex:0,turnSeq:0,startedAt:firebase.database.ServerValue.TIMESTAMP});
 }
 </script>
 
@@ -1118,5 +1163,23 @@ window.addEventListener('load',()=>{
  if(start)start.onclick=startOnlineGame;
 });
 </script>
+
+<div id="onlineTurnBanner" class="turn-banner" style="display:none"></div>
+
+window.addEventListener('load',()=>{
+ const rb=document.getElementById('roll');
+ if(rb)rb.addEventListener('click',async e=>{
+   if(gameMode!=='friend'||!onlineRoomCode)return;
+   const snap=await rtdb.ref('rooms/'+onlineRoomCode).once('value'),room=snap.val();
+   const arr=orderedOnlinePlayers(room||{}),idx=((room&&room.turnIndex)||0)%Math.max(1,arr.length);
+   if(!arr.length||arr[idx][0]!==onlinePlayerId){e.preventDefault();e.stopImmediatePropagation();status('지금은 내 차례가 아닙니다.');}
+ },true);
+ const eb=document.getElementById('end');
+ if(eb)eb.addEventListener('click',async e=>{
+   if(gameMode!=='friend'||!onlineRoomCode)return;
+   e.preventDefault();e.stopImmediatePropagation();
+   await onlineEndTurn();
+ },true);
+});
 
 </body></html>
