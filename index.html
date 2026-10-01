@@ -682,7 +682,7 @@ function renderDice(a=1,b=1,cls=''){
  const d=document.getElementById('dice');if(!d)return;
  d.innerHTML=`<span class="die3d ${cls}" aria-label="${a}">${dicePips(a)}</span><span class="die3d ${cls}" aria-label="${b}">${dicePips(b)}</span>`;
 }
-function showTurnOrder(){const old=document.getElementById('orderPop');if(old)old.remove();const box=document.createElement('div');box.id='orderPop';box.className='order-pop';box.innerHTML=`<h3>🎲 이번 게임 순서</h3>${P.slice(0,gameCount).map((p,i)=>`<div class="order-line">${i+1}. ${escapeHtml(p.name)}</div>`).join('')}`;const board=document.getElementById('board');if(board){board.style.position='relative';board.appendChild(box);setTimeout(()=>box.remove(),2200)}}
+function showTurnOrder(){}
 
 async function roll(){
  if(rollLock||rolled||over)return;
@@ -1168,7 +1168,7 @@ document.querySelectorAll('.ai-count').forEach(b=>b.onclick=()=>{
   keyBoost:Number(document.getElementById('aiKey')?.value)||1,
   isPublic:false
  };
- gameMode='ai';gameCount=+b.dataset.count;autoPlay=false;gameSpeed=2;screen('gameApp');reset();const sh=shuffleArray(P.slice(0,gameCount));P.splice(0,gameCount,...sh);turn=0;ui();showTurnOrder();updateAutoControls();
+ gameMode='ai';gameCount=+b.dataset.count;autoPlay=false;gameSpeed=2;screen('gameApp');reset();const sh=shuffleArray(P.slice(0,gameCount));P.splice(0,gameCount,...sh);turn=0;ui();updateAutoControls();
 });
 
 
@@ -1460,14 +1460,14 @@ const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=
    if(start){
      const host=room.host===onlinePlayerId;
      start.disabled=false;
-     const ready=host&&entries.length>=Number(room.maxPlayers||2);
+     const ready=host&&entries.length===Number(room.maxPlayers||2);
      start.classList.toggle('ready',ready);
      start.textContent=host?(ready?'게임 시작':`친구를 기다리는 중... (${entries.length}/${room.maxPlayers})`):'방장이 시작하기를 기다리는 중...';
    }
    if(room.status==='playing'){
-     if(room.playerOrder&&!document.getElementById('orderPop'))setTimeout(showTurnOrder,120);
+     
      if(!room.players || !room.players[onlinePlayerId]){localStorage.removeItem('wtOnlineRoom');localStorage.removeItem('wtOnlineRole');return}
-     gameMode='friend';gameCount=entries.length;
+     gameMode='friend';gameCount=Array.isArray(room.playerOrder)?room.playerOrder.length:entries.length;
      if(!chatListener)watchChat(code);
      if(!document.body.classList.contains('friend-online')){screen('gameApp');document.body.classList.add('friend-online')}
      if(room.game){
@@ -1527,6 +1527,11 @@ async function pushOnlineGame(extra={}){
  await rtdb.ref(`rooms/${onlineRoomCode}/game`).set(packOnlineGame(extra));
 }
 function applyRemoteGame(g,room){
+ if(Array.isArray(g?.players)){
+  gameCount=g.players.length;
+  while(P.length<gameCount)P.push({name:'플레이어',money:Number(gameSettings.initialMoney)||2200000,pos:0,jail:0,dead:false,laps:0});
+ }
+
  if(g?.settings)gameSettings={...gameSettings,...g.settings};
  if(!g||!Array.isArray(g.players))return;
  applyingRemoteGame=true;
@@ -1594,12 +1599,11 @@ async function sendChat(){
 }
 
 function orderedOnlinePlayers(room){
- const entries=Object.entries(room?.players||{});
+ const live=room?.players||{},snap=room?.playerSnapshot||{};
  if(Array.isArray(room?.playerOrder)&&room.playerOrder.length){
-  const map=Object.fromEntries(entries);
-  return room.playerOrder.filter(id=>map[id]).map(id=>[id,map[id]]);
+  return room.playerOrder.map(id=>[id,live[id]||snap[id]]).filter(x=>x[1]);
  }
- return entries.sort((a,b)=>(a[1]?.joinedAt||0)-(b[1]?.joinedAt||0));
+ return Object.entries(live).sort((a,b)=>(a[1]?.joinedAt||0)-(b[1]?.joinedAt||0));
 }
 function applyOnlineTurn(room){
  if(room.status!=='playing')return;
@@ -1637,18 +1641,25 @@ async function startOnlineGame(){
  const snap=await ref.once('value');
  const room=snap.val();
  if(!room || room.host!==onlinePlayerId)return;
- const arr=shuffleArray(orderedOnlinePlayers(room));
- gameCount=arr.length;
+ const joined=Object.entries(room.players||{}).sort((a,b)=>(a[1]?.joinedAt||0)-(b[1]?.joinedAt||0));
+ if(joined.length!==Number(room.maxPlayers||2)){
+   alert(`인원이 맞지 않습니다. (${joined.length}/${room.maxPlayers||2})`);
+   return;
+ }
+ const arr=shuffleArray(joined);
+ const playerOrder=arr.map(x=>x[0]);
+ const playerSnapshot=Object.fromEntries(arr.map(([id,p])=>[id,{name:p.name||'플레이어',joinedAt:p.joinedAt||0}]));
+ gameCount=playerOrder.length;
  gameMode='friend';
  reset();
- P.forEach((p,i)=>p.name=arr[i]?.[1]?.name||p.name);
- const playerOrder=arr.map(x=>x[0]);
- showTurnOrder();
+ P.forEach((p,i)=>p.name=playerSnapshot[playerOrder[i]]?.name||p.name);
+ 
  await ref.update({
    status:'playing',
    turnIndex:0,
    turnSeq:0,
    playerOrder,
+   playerSnapshot,
    game:packOnlineGame(),
    startedAt:firebase.database.ServerValue.TIMESTAMP
  });
@@ -1760,7 +1771,7 @@ window.addEventListener('load',()=>{
      if(!room)return alert('방 정보를 찾을 수 없습니다.');
      const count=Object.keys(room.players||{}).length;
      if(room.host!==onlinePlayerId)return alert('방장만 게임을 시작할 수 있습니다.');
-     if(count<Number(room.maxPlayers||2))return alert(`아직 인원이 부족합니다. (${count}/${room.maxPlayers||2})`);
+     if(count!==Number(room.maxPlayers||2))return alert(`인원이 맞지 않습니다. (${count}/${room.maxPlayers||2})`);
      if(start.dataset.busy==='1')return;start.dataset.busy='1';
      await startOnlineGame();
      start.dataset.busy='0';
