@@ -436,9 +436,9 @@ body.friend-online #autoPlay,body.friend-online #gameSpeed{display:none!importan
 <div id="friendLobby" class="lobby-screen hidden">
  <div class="lobby-shell small">
   <button class="backbtn" id="friendBack">← 로비</button>
-  <div class="lobby-brand compact"><h1>🧑‍🤝‍🧑 친구</h1><p>닉네임으로 접속 중인 친구에게 바로 도전</p></div>
-  <div class="join-box"><input id="friendNick" maxlength="12" placeholder="내 닉네임"><button id="friendOnline">온라인 접속</button></div>
-  <div id="friendList" class="friend-list"><div class="lobby-note">온라인 접속을 누르면 친구 목록이 표시됩니다.</div></div>
+  <div class="lobby-brand compact"><h1>🧑‍🤝‍🧑 친구</h1><p>현재 온라인인 플레이어에게 바로 도전</p></div>
+  <div class="join-box"><input id="friendNick" maxlength="12" placeholder="내 닉네임"><button id="friendOnline">닉네임 변경</button></div>
+  <div id="friendList" class="friend-list"><div class="lobby-note">현재 온라인인 플레이어를 불러오는 중...</div></div>
   <div id="challengeBox"></div>
  </div>
 </div>
@@ -1128,18 +1128,26 @@ function onlineName(){return '플레이어 '+makePlayerId().slice(-4).toUpperCas
 
 let presenceRef=null,presenceListener=null,challengeListener=null;
 function myNick(){return (localStorage.getItem('wtNick')||'').trim()}
-async function goOnline(){
- const nick=document.getElementById('friendNick').value.trim().slice(0,12);if(!nick){alert('닉네임을 입력하세요.');return}
- localStorage.setItem('wtNick',nick);onlinePlayerId=makePlayerId();
+async function goOnline(silent=false){
+ onlinePlayerId=makePlayerId();
+ let input=document.getElementById('friendNick');
+ let nick=(input?.value.trim()||myNick()||('플레이어 '+onlinePlayerId.slice(-4))).slice(0,12);
+ localStorage.setItem('wtNick',nick);
+ if(input)input.value=nick;
+ if(presenceRef)try{await presenceRef.remove()}catch(e){}
  presenceRef=rtdb.ref('presence/'+onlinePlayerId);
  await presenceRef.set({name:nick,online:true,at:firebase.database.ServerValue.TIMESTAMP});
  presenceRef.onDisconnect().remove();
  watchPresence();watchChallenges();
+ if(!silent)statusFriend(`🟢 ${nick}으로 온라인`);
+}
+function statusFriend(msg){
+ const box=document.getElementById('challengeBox');if(box&&!box.querySelector('.friend-row'))box.innerHTML=`<div class="lobby-note">${escapeHtml(msg)}</div>`;
 }
 function watchPresence(){
  presenceListener=rtdb.ref('presence').on('value',snap=>{
   const list=document.getElementById('friendList');if(!list)return;list.innerHTML='';
-  const all=snap.val()||{};Object.entries(all).filter(([id])=>id!==makePlayerId()).forEach(([id,u])=>{
+  const all=snap.val()||{};Object.entries(all).filter(([id])=>id!==onlinePlayerId).forEach(([id,u])=>{
    const row=document.createElement('div');row.className='friend-row';row.innerHTML=`<span>🟢 ${escapeHtml(u.name||'친구')}</span><button>도전</button>`;
    row.querySelector('button').onclick=()=>sendChallenge(id,u.name);list.appendChild(row);
   });
@@ -1147,25 +1155,30 @@ function watchPresence(){
  });
 }
 async function sendChallenge(id,name){
- await rtdb.ref(`challenges/${id}/${makePlayerId()}`).set({from:makePlayerId(),name:myNick()||'플레이어',at:firebase.database.ServerValue.TIMESTAMP});
+ await rtdb.ref(`challenges/${id}/${onlinePlayerId}`).set({from:onlinePlayerId,name:myNick()||'플레이어',at:firebase.database.ServerValue.TIMESTAMP});
  alert(`${name}에게 도전 신청을 보냈습니다.`);
 }
 function watchChallenges(){
- challengeListener=rtdb.ref(`challenges/${makePlayerId()}`).on('child_added',snap=>{
+ if(challengeListener)rtdb.ref(`challenges/${onlinePlayerId}`).off('child_added',challengeListener);
+ challengeListener=rtdb.ref(`challenges/${onlinePlayerId}`).on('child_added',async snap=>{
   const c=snap.val();if(!c)return;
-  const box=document.getElementById('challengeBox');box.innerHTML=`<div class="friend-row"><span>⚔️ ${escapeHtml(c.name)}님의 도전</span><span><button id="acceptChallenge">수락</button> <button id="declineChallenge">거절</button></span></div>`;
-  document.getElementById('acceptChallenge').onclick=async()=>{
+  const box=document.getElementById('challengeBox');
+  box.innerHTML=`<div class="friend-row"><span>⚔️ ${escapeHtml(c.name)}님의 대전 신청</span><span><button id="acceptChallenge">수락</button> <button id="declineChallenge">거절</button></span></div>`;
+  const accept=async()=>{
     const code=await createOnlineRoom(2);
-    await rtdb.ref(`challengeAccept/${c.from}`).set({code,from:makePlayerId(),at:firebase.database.ServerValue.TIMESTAMP});
+    await rtdb.ref(`challengeAccept/${c.from}`).set({code,from:onlinePlayerId,at:firebase.database.ServerValue.TIMESTAMP});
     await snap.ref.remove();screen('waitingRoom');
   };
+  document.getElementById('acceptChallenge').onclick=accept;
   document.getElementById('declineChallenge').onclick=async()=>{await snap.ref.remove();box.innerHTML=''};
+  if(document.visibilityState==='visible' && confirm(`${c.name}님이 친구 대전을 신청했습니다. 수락할까요?`))await accept();
  });
- rtdb.ref(`challengeAccept/${makePlayerId()}`).on('value',async snap=>{
-  const v=snap.val();if(!v?.code)return;await joinOnlineRoom(v.code);await snap.ref.remove();screen('waitingRoom');
+ rtdb.ref(`challengeAccept/${onlinePlayerId}`).on('value',async snap=>{
+  const v=snap.val();if(!v?.code)return;
+  try{await joinOnlineRoom(v.code);await snap.ref.remove();screen('waitingRoom')}
+  catch(e){alert('대전 입장 실패: '+e.message)}
  });
 }
-
 async function createOnlineRoom(maxPlayers){
  onlinePlayerId=makePlayerId();
  let code, snap;
@@ -1379,9 +1392,13 @@ async function startOnlineGame(){
 <script>
 window.addEventListener('load',()=>{
 
- const fs=document.getElementById('openFriends');if(fs)fs.onclick=()=>{screen('friendLobby');document.getElementById('friendNick').value=myNick()};
+ const fs=document.getElementById('openFriends');if(fs)fs.onclick=async()=>{
+   screen('friendLobby');
+   document.getElementById('friendNick').value=myNick();
+   try{await goOnline(true)}catch(e){alert('친구 목록 연결 실패: '+e.message)}
+ };
  const fb=document.getElementById('friendBack');if(fb)fb.onclick=()=>screen('lobby');
- const fo=document.getElementById('friendOnline');if(fo)fo.onclick=goOnline;
+ const fo=document.getElementById('friendOnline');if(fo)fo.onclick=()=>goOnline(false);
  const cs=document.getElementById('chatSend');if(cs)cs.onclick=sendChat;
  const ci=document.getElementById('chatInput');if(ci)ci.onkeydown=e=>{if(e.key==='Enter')sendChat()};
  // 새로 사이트를 열면 항상 로비부터 시작한다.
@@ -1452,6 +1469,26 @@ window.addEventListener('load',()=>{
    return r;
   };
  }
+});
+</script>
+
+
+<script>
+window.addEventListener('load',()=>{
+ const start=document.getElementById('startRoom');
+ if(start)start.addEventListener('click',async e=>{
+   if(!onlineRoomCode)return;
+   e.preventDefault();e.stopImmediatePropagation();
+   try{
+     const snap=await rtdb.ref('rooms/'+onlineRoomCode).once('value'),room=snap.val();
+     if(!room)return alert('방 정보를 찾을 수 없습니다.');
+     const count=Object.keys(room.players||{}).length;
+     if(room.host!==onlinePlayerId)return alert('방장만 게임을 시작할 수 있습니다.');
+     if(count<Number(room.maxPlayers||2))return alert(`아직 인원이 부족합니다. (${count}/${room.maxPlayers||2})`);
+     start.disabled=true;
+     await startOnlineGame();
+   }catch(err){start.disabled=false;alert('게임 입장 실패: '+err.message)}
+ },true);
 });
 </script>
 
