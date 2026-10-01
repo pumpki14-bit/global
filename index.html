@@ -393,6 +393,21 @@ body.friend-online #autoPlay,body.friend-online #gameSpeed{display:none!importan
 .friend-main{display:flex;align-items:center;gap:9px;min-width:0}.friend-meta{font-size:10px;color:#91a8ba;margin-top:2px}
 .online-dot{color:#54e58b}.offline-dot{color:#7b8790}
 .friend-row{cursor:pointer}.friend-actions{display:flex;gap:5px}.friend-actions button{font-size:10px;padding:6px 8px}
+
+/* v44 game side layout */
+.game{align-items:stretch}
+.side{display:grid!important;grid-template-columns:1fr;grid-template-rows:auto minmax(220px,1fr) auto;gap:8px;height:100%}
+.side>.card:first-child{grid-row:1}
+.side>.card:nth-child(2){display:none}
+.side>.chatcard{grid-row:2;min-height:260px;display:flex;flex-direction:column}
+.chat-messages{flex:1;min-height:190px;max-height:none!important}
+.side>.logcard{grid-row:3;max-height:150px}
+.room-options{display:grid;gap:9px;margin:12px 0;text-align:left}
+.room-options label{display:grid;grid-template-columns:1fr 150px;gap:10px;align-items:center;font-size:12px}
+.room-options input,.room-options select{width:100%;box-sizing:border-box}
+.public-list{display:grid;gap:7px;margin-top:10px}
+.public-room{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px;border:1px solid #29465a;border-radius:9px}
+.public-room small{color:#91a8ba}
 </style></head>
 <body>
 <div id="lobby" class="lobby-screen">
@@ -400,7 +415,7 @@ body.friend-online #autoPlay,body.friend-online #gameSpeed{display:none!importan
     <div class="lobby-brand"><div class="globe">🌍</div><h1>WORLD TOUR</h1><p>친구와 함께 세계 도시를 차지하세요</p></div>
     <div class="lobby-card">
       <button class="lobby-main" id="openRoom">👥 방 만들기 <span>2 · 3 · 4인</span></button>
-      <button class="lobby-main join" id="openJoin">🔗 방 참가 <span>코드 입력</span></button>
+      <button class="lobby-main join" id="openJoin">🔗 방 참가 <span>코드 입력</span></button><button class="lobby-main" id="openPublic">🌐 공개방 <span>코드 없이 참가</span></button>
       <button class="lobby-main" id="openFriends">🧑‍🤝‍🧑 친구 <span>접속 중인 친구에게 도전</span></button><button class="lobby-main ai" id="openAI">🤖 AI 대전 <span>바로 시작</span></button>
     </div>
     <div class="lobby-note">친구 대전은 인원 선택 후 대기방으로 이동합니다.</div>
@@ -414,6 +429,14 @@ body.friend-online #autoPlay,body.friend-online #gameSpeed{display:none!importan
       <button class="count-btn" data-count="2"><b>2인</b><span>1 : 1</span></button>
       <button class="count-btn" data-count="3"><b>3인</b><span>3명 대전</span></button>
       <button class="count-btn" data-count="4"><b>4인</b><span>4명 대전</span></button>
+    </div>
+    <div class="room-options">
+      <label>방 공개 <select id="setPublic"><option value="true">공개방</option><option value="false">비공개방</option></select></label>
+      <label>초기 자금 <input id="setMoney" type="number" min="100000" step="10000" value="2200000"></label>
+      <label>자동플레이 <select id="setAuto"><option value="true">허용</option><option value="false">사용 불가</option></select></label>
+      <label>배속 <select id="setSpeed"><option value="true">허용</option><option value="false">1배속 고정</option></select></label>
+      <label>더블 확률 <select id="setDouble"><option value="1">기본</option><option value="1.5">높음</option><option value="2">매우 높음</option></select></label>
+      <label>황금열쇠 확률 <select id="setKey"><option value="1">기본</option><option value="1.5">높음</option><option value="2">매우 높음</option></select></label>
     </div>
   </div>
 </div>
@@ -438,6 +461,14 @@ body.friend-online #autoPlay,body.friend-online #gameSpeed{display:none!importan
     <div id="joinMessage" class="lobby-note">6자리 방 코드를 입력하면 친구 방에 참가합니다.</div>
   </div>
 </div>
+<div id="publicLobby" class="lobby-screen hidden">
+ <div class="lobby-shell small">
+  <button class="backbtn" id="publicBack">← 로비</button>
+  <div class="lobby-brand compact"><h1>🌐 공개방</h1><p>입장 가능한 공개방에 바로 참가하세요</p></div>
+  <button id="refreshPublic">새로고침</button>
+  <div id="publicRoomList" class="public-list"><div class="lobby-note">공개방을 불러오는 중...</div></div>
+ </div>
+</div>
 
 <div id="friendLobby" class="lobby-screen hidden">
  <div class="lobby-shell small">
@@ -458,6 +489,13 @@ body.friend-online #autoPlay,body.friend-online #gameSpeed{display:none!importan
       <button class="count-btn ai-count" data-count="2"><b>2인</b><span>나 + AI 1</span></button>
       <button class="count-btn ai-count" data-count="3"><b>3인</b><span>나 + AI 2</span></button>
       <button class="count-btn ai-count" data-count="4"><b>4인</b><span>나 + AI 3</span></button>
+    </div>
+    <div class="room-options">
+      <label>초기 자금 <input id="aiMoney" type="number" min="100000" step="10000" value="2200000"></label>
+      <label>자동플레이 <select id="aiAuto"><option value="true">허용</option><option value="false">사용 불가</option></select></label>
+      <label>배속 <select id="aiSpeedAllow"><option value="true">허용</option><option value="false">1배속 고정</option></select></label>
+      <label>더블 확률 <select id="aiDouble"><option value="1">기본</option><option value="1.5">높음</option><option value="2">매우 높음</option></select></label>
+      <label>황금열쇠 확률 <select id="aiKey"><option value="1">기본</option><option value="1.5">높음</option><option value="2">매우 높음</option></select></label>
     </div>
   </div>
 </div>
@@ -538,6 +576,7 @@ let data=[];function mk(){
 })();
 
 let P=[],turn=0,rolled=false,dbl=false,over=false,gameCount=4,gameMode='ai',autoPlay=false,gameSpeed=2;
+let gameSettings={initialMoney:2200000,allowAuto:true,allowSpeed:true,doubleBoost:1,keyBoost:1,isPublic:false};
 function xy(i){
  if(i<=13)return[8,i+1];
  if(i<=19)return[21-i,14];
@@ -581,6 +620,9 @@ function ui(){
  document.getElementById('buy').disabled=!(h&&rolled&&(t.type==='CITY'||t.type==='SPECIAL')&&t.owner<0&&p.money>=t.price);
  document.getElementById('end').disabled=!(h&&rolled);
  document.getElementById('sellLand').disabled=!(h&&data.some(x=>x.owner===localIdx));
+ const ap=document.getElementById('autoPlay');if(ap)ap.style.display=gameSettings.allowAuto?'':'none';
+ const gs=document.getElementById('gameSpeed');if(gs){gs.style.display=gameSettings.allowSpeed?'':'none';if(!gameSettings.allowSpeed){gameSpeed=1;gs.value='1'}}
+
  players();draw();
 }
 const wait=m=>new Promise(r=>setTimeout(r,Math.max(8,m/(gameMode==='ai'?gameSpeed:1))));
@@ -592,6 +634,12 @@ function won(n){
  }
  return n.toLocaleString('ko-KR')+'원';
 }
+function boostedDice(){
+ let a=1+Math.floor(Math.random()*6),b=1+Math.floor(Math.random()*6);
+ const boost=Math.max(1,Number(gameSettings.doubleBoost)||1);
+ if(boost>1 && Math.random()<Math.min(.65,(boost-1)*.32))b=a;
+ return [a,b];
+}
 async function roll(){
  if(rollLock||rolled||over)return;
  rollLock=true;
@@ -599,7 +647,7 @@ async function roll(){
  if(gameMode==='friend')onlineRolling=true;
  rolled=true;ui();let a,b;
 if(p.jail){
- for(let k=0;k<7;k++){a=1+Math.random()*6|0;b=1+Math.random()*6|0;document.getElementById('dice').textContent=F[a-1]+' '+F[b-1];if(gameMode==='friend')await pushOnlineGame();await wait(60)}
+ for(let k=0;k<7;k++){[a,b]=boostedDice();document.getElementById('dice').textContent=F[a-1]+' '+F[b-1];if(gameMode==='friend')await pushOnlineGame();await wait(60)}
  if(a===b){
    p.jail=0;dbl=false;status('더블! 무인도 탈출');log(p.name+' 더블로 무인도 탈출');
  }else{
@@ -613,7 +661,7 @@ if(p.jail){
    status('3턴 경과로 무인도 탈출');log(p.name+' 무인도 자동 탈출');
  }
 }
-for(let k=0;k<7;k++){a=1+Math.random()*6|0;b=1+Math.random()*6|0;document.getElementById('dice').textContent=F[a-1]+' '+F[b-1];if(gameMode==='friend')await pushOnlineGame();await wait(60)}dbl=a===b;for(let k=0;k<a+b;k++){p.pos=(p.pos+1)%40;if(p.pos===0){p.money+=200000;p.laps++;log(p.name+' 출발 통과 +20만원 · '+p.laps+'바퀴')}draw();if(gameMode==='friend')await pushOnlineGame();await wait(80)}await land();ui();
+for(let k=0;k<7;k++){[a,b]=boostedDice();document.getElementById('dice').textContent=F[a-1]+' '+F[b-1];if(gameMode==='friend')await pushOnlineGame();await wait(60)}dbl=a===b;for(let k=0;k<a+b;k++){p.pos=(p.pos+1)%40;if(p.pos===0){p.money+=200000;p.laps++;log(p.name+' 출발 통과 +20만원 · '+p.laps+'바퀴')}draw();if(gameMode==='friend')await pushOnlineGame();await wait(80)}await land();ui();
 if(gameMode==='friend'){
  await pushOnlineGame();
  onlineRolling=false;
@@ -676,7 +724,14 @@ if(t.type==='KEY'){
  const pool=[];cards.forEach(c=>{for(let i=0;i<c.w;i++)pool.push(c)});
  const c=pool[Math.random()*pool.length|0];c.fn();status('🔑 '+c.n);log(p.name+' 황금열쇠: '+c.n);bankrupt(turn);
  if(gameMode==='friend')pushOnlineGame({goldenKey:c.n});
-}else if(t.type==='ISLAND'){p.jail=3;status('무인도! 다음 턴부터 더블로 탈출 · 최대 3턴')}else if(t.type==='FUND'){p.money-=150000;status('복지기금 ₩150,000 납부');bankrupt(turn)}else if(t.type==='TRAVEL'){let free=data.filter(x=>x.type==='CITY'&&x.owner<0);if(free.length){let q=free.sort((a,b)=>b.price-a.price)[0];p.pos=q.i;status('🚀 '+q.name+'으로 이동');log(p.name+' 세계여행 → '+q.name)}}else status('출발!')}
+}else if(t.type==='ISLAND'){p.jail=3;status('무인도! 다음 턴부터 더블로 탈출 · 최대 3턴')}else if(t.type==='FUND'){p.money-=150000;status('복지기금 ₩150,000 납부');bankrupt(turn)}else if(t.type==='TRAVEL'){let free=data.filter(x=>x.type==='CITY'&&x.owner<0);if(free.length){let q=free.sort((a,b)=>b.price-a.price)[0];p.pos=q.i;status('🚀 '+q.name+'으로 이동');log(p.name+' 세계여행 → '+q.name)}}else {
+ const extraKey=Math.max(0,(Number(gameSettings.keyBoost)||1)-1)*0.16;
+ if(extraKey>0&&Math.random()<extraKey){
+   const keyTile=data.find(x=>x.type==='KEY');
+   if(keyTile){status('🔑 황금열쇠 보너스 발동!');const old=p.pos;p.pos=keyTile.i;await land();p.pos=old;draw();return}
+ }
+ status('출발!');
+}}
 
 
 
@@ -1006,10 +1061,10 @@ function showLandInfo(){
  }));
 }
 function modal(h,b){document.getElementById('mh').textContent=h;document.getElementById('mb').textContent=b;let a=document.getElementById('ma');a.innerHTML='';let q=document.createElement('button');q.textContent='새 게임';q.onclick=()=>{document.getElementById('modal').classList.remove('show');reset()};a.appendChild(q);document.getElementById('modal').classList.add('show')}
-function reset(){P=PN.slice(0,gameCount).map((n,i)=>({name:n,money:2200000,pos:0,jail:0,dead:false,laps:0}));data.forEach(t=>{t.owner=-1;t.bld=0;t.purchasedLap=-1});turn=0;rolled=false;dbl=false;over=false;document.getElementById('log').innerHTML='';status('주사위를 굴려 시작하세요.');log('게임 시작 — 40칸 월드 투어');ui()}
+function reset(){P=PN.slice(0,gameCount).map((n,i)=>({name:n,money:Number(gameSettings.initialMoney)||2200000,pos:0,jail:0,dead:false,laps:0}));data.forEach(t=>{t.owner=-1;t.bld=0;t.purchasedLap=-1});turn=0;rolled=false;dbl=false;over=false;document.getElementById('log').innerHTML='';status('주사위를 굴려 시작하세요.');log('게임 시작 — 40칸 월드 투어');ui()}
 
 function screen(id){
- ['lobby','roomSetup','waitingRoom','joinRoom','friendLobby','aiSetup','gameApp'].forEach(x=>document.getElementById(x).classList.add('hidden'));
+ ['lobby','roomSetup','waitingRoom','joinRoom','publicLobby','friendLobby','aiSetup','gameApp'].forEach(x=>document.getElementById(x).classList.add('hidden'));
  document.getElementById(id).classList.remove('hidden');
 }
 function makeCode(){return Math.random().toString(36).slice(2,8).toUpperCase()}
@@ -1029,6 +1084,14 @@ document.getElementById('setupBack').onclick=()=>screen('lobby');
 document.getElementById('aiBack').onclick=()=>screen('lobby');
 document.getElementById('waitingBack').onclick=()=>screen('roomSetup');
 document.querySelectorAll('#roomSetup .count-btn').forEach(b=>b.onclick=()=>{
+ gameSettings={
+  initialMoney:Number(document.getElementById('setMoney')?.value)||2200000,
+  allowAuto:document.getElementById('setAuto')?.value!=='false',
+  allowSpeed:document.getElementById('setSpeed')?.value!=='false',
+  doubleBoost:Number(document.getElementById('setDouble')?.value)||1,
+  keyBoost:Number(document.getElementById('setKey')?.value)||1,
+  isPublic:document.getElementById('setPublic')?.value==='true'
+ };
  const n=+b.dataset.count,code=makeCode();
  document.getElementById('roomCode').textContent=code;
  document.getElementById('roomCountText').textContent=`${n}인 친구 대전 · 1 / ${n}명`;
@@ -1044,6 +1107,14 @@ document.getElementById('copyCode').onclick=async()=>{
  catch(e){alert('방 코드: '+code)}
 };
 document.querySelectorAll('.ai-count').forEach(b=>b.onclick=()=>{
+ gameSettings={
+  initialMoney:Number(document.getElementById('aiMoney')?.value)||2200000,
+  allowAuto:document.getElementById('aiAuto')?.value!=='false',
+  allowSpeed:document.getElementById('aiSpeedAllow')?.value!=='false',
+  doubleBoost:Number(document.getElementById('aiDouble')?.value)||1,
+  keyBoost:Number(document.getElementById('aiKey')?.value)||1,
+  isPublic:false
+ };
  gameMode='ai';gameCount=+b.dataset.count;autoPlay=false;gameSpeed=2;screen('gameApp');reset();updateAutoControls();
 });
 
@@ -1257,6 +1328,7 @@ async function createOnlineRoom(maxPlayers){
  onlineRoomCode=code;
  await rtdb.ref('rooms/'+code).set({
    host:onlinePlayerId,maxPlayers:Number(maxPlayers)||4,status:'waiting',
+   public:!!gameSettings.isPublic,settings:gameSettings,
    createdAt:firebase.database.ServerValue.TIMESTAMP,turnIndex:0,turnSeq:0,
    players:{[onlinePlayerId]:{name:myNick()||onlineName(),joinedAt:firebase.database.ServerValue.TIMESTAMP}}
  });
@@ -1271,6 +1343,7 @@ async function joinOnlineRoom(code){
  const ref=rtdb.ref('rooms/'+code),snap=await ref.once('value');
  if(!snap.exists())throw new Error('존재하지 않는 방입니다.');
  const room=snap.val(),players=room.players?Object.keys(room.players):[];
+ if(room.settings)gameSettings={...gameSettings,...room.settings};
  if(room.status!=='waiting')throw new Error('이미 시작된 방입니다.');
  if(players.length>=room.maxPlayers)throw new Error('방이 가득 찼습니다.');
  onlinePlayerId=makePlayerId();onlineRoomCode=code;
@@ -1370,6 +1443,7 @@ function packOnlineGame(extra={}){
   turn,rolled:!!rolled,dbl:!!dbl,over:!!over,
   dice:document.getElementById('dice').textContent,
   message:document.getElementById('status').textContent,
+  settings:gameSettings,
   updatedAt:firebase.database.ServerValue.TIMESTAMP,...extra
  };
 }
@@ -1378,6 +1452,7 @@ async function pushOnlineGame(extra={}){
  await rtdb.ref(`rooms/${onlineRoomCode}/game`).set(packOnlineGame(extra));
 }
 function applyRemoteGame(g,room){
+ if(g?.settings)gameSettings={...gameSettings,...g.settings};
  if(!g||!Array.isArray(g.players))return;
  applyingRemoteGame=true;
  const arr=orderedOnlinePlayers(room);
@@ -1512,6 +1587,14 @@ window.addEventListener('load',()=>{
 
  // Room setup buttons: preserve existing UI selection, but create Firebase room when selected.
  document.querySelectorAll('#roomSetup button[data-count],#roomSetup [data-players],#roomSetup .count-btn').forEach(btn=>{
+   btn.addEventListener('click',()=>{gameSettings={
+    initialMoney:Number(document.getElementById('setMoney')?.value)||2200000,
+    allowAuto:document.getElementById('setAuto')?.value!=='false',
+    allowSpeed:document.getElementById('setSpeed')?.value!=='false',
+    doubleBoost:Number(document.getElementById('setDouble')?.value)||1,
+    keyBoost:Number(document.getElementById('setKey')?.value)||1,
+    isPublic:document.getElementById('setPublic')?.value==='true'
+   }},{capture:true,once:true});
    btn.addEventListener('click',async e=>{
      e.stopImmediatePropagation();
      const count=+(btn.dataset.count||btn.dataset.players||btn.textContent.match(/[234]/)?.[0]||4);
@@ -1605,4 +1688,28 @@ window.addEventListener('load',()=>{
 });
 </script>
 
+<script>
+async function loadPublicRooms(){
+ const box=document.getElementById('publicRoomList');if(!box)return;
+ box.innerHTML='<div class="lobby-note">공개방을 불러오는 중...</div>';
+ try{
+  const snap=await rtdb.ref('rooms').once('value'),rooms=snap.val()||{};
+  const open=Object.entries(rooms).filter(([code,r])=>r&&r.public===true&&r.status==='waiting'&&Object.keys(r.players||{}).length<Number(r.maxPlayers||4));
+  box.innerHTML='';
+  open.sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0)).forEach(([code,r])=>{
+   const n=Object.keys(r.players||{}).length,host=r.players?.[r.host]?.name||'방장';
+   const row=document.createElement('div');row.className='public-room';
+   row.innerHTML=`<div><b>🌐 ${escapeHtml(host)}의 방</b><br><small>${n}/${r.maxPlayers}명 · 초기자금 ${won(r.settings?.initialMoney||2200000)}</small></div><button>입장</button>`;
+   row.querySelector('button').onclick=async()=>{try{await joinOnlineRoom(code);screen('waitingRoom')}catch(e){alert('입장 실패: '+e.message)}};
+   box.appendChild(row);
+  });
+  if(!open.length)box.innerHTML='<div class="lobby-note">현재 입장 가능한 공개방이 없습니다.</div>';
+ }catch(e){box.innerHTML=`<div class="lobby-note">공개방 불러오기 실패: ${escapeHtml(e.message)}</div>`}
+}
+window.addEventListener('load',()=>{
+ const op=document.getElementById('openPublic');if(op)op.onclick=()=>{screen('publicLobby');loadPublicRooms()};
+ const pb=document.getElementById('publicBack');if(pb)pb.onclick=()=>screen('lobby');
+ const rp=document.getElementById('refreshPublic');if(rp)rp.onclick=loadPublicRooms;
+});
+</script>
 </body></html>
