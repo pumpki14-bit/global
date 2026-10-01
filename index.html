@@ -387,6 +387,12 @@ body.friend-online #autoPlay,body.friend-online #gameSpeed{display:none!importan
 .friend-list{display:grid;gap:7px;margin-top:10px}.friend-row{display:flex;justify-content:space-between;align-items:center;padding:9px;background:#10212d;border:1px solid #29465a;border-radius:9px}.friend-row button{padding:6px 10px}
 .token{width:18px!important;height:18px!important;border:3px solid #fff!important;box-shadow:0 0 0 2px #061018,0 0 14px #fff9!important;z-index:12!important}
 .tile.active-move{outline:3px solid #fff;outline-offset:-3px;filter:brightness(1.35)}
+
+.friend-tabs{display:flex;gap:6px;margin:10px 0}.friend-tabs button{flex:1}.friend-tabs .active{outline:2px solid #66c7ff}
+.friend-avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#18384b;font-weight:900}
+.friend-main{display:flex;align-items:center;gap:9px;min-width:0}.friend-meta{font-size:10px;color:#91a8ba;margin-top:2px}
+.online-dot{color:#54e58b}.offline-dot{color:#7b8790}
+.friend-row{cursor:pointer}.friend-actions{display:flex;gap:5px}.friend-actions button{font-size:10px;padding:6px 8px}
 </style></head>
 <body>
 <div id="lobby" class="lobby-screen">
@@ -417,7 +423,7 @@ body.friend-online #autoPlay,body.friend-online #gameSpeed{display:none!importan
     <div class="lobby-brand compact"><h1>대기방</h1><p id="roomCountText"></p></div>
     <div class="room-code-box"><span>방 코드</span><b id="roomCode">------</b><button id="copyCode">코드 복사</button></div>
     <div id="roomSlots" class="room-slots"></div>
-    <button class="start-room" id="startRoom" disabled>친구를 기다리는 중...</button>
+    <button class="start-room" id="startRoom">친구를 기다리는 중...</button>
     <div class="lobby-note">친구가 방 코드로 참가하면 이곳에 실시간 표시됩니다. 새로고침해도 방에 유지됩니다.</div>
   </div>
 </div>
@@ -436,12 +442,14 @@ body.friend-online #autoPlay,body.friend-online #gameSpeed{display:none!importan
 <div id="friendLobby" class="lobby-screen hidden">
  <div class="lobby-shell small">
   <button class="backbtn" id="friendBack">← 로비</button>
-  <div class="lobby-brand compact"><h1>🧑‍🤝‍🧑 친구</h1><p>현재 온라인인 플레이어에게 바로 도전</p></div>
+  <div class="lobby-brand compact"><h1>👥 친구</h1><p>친구 상태를 확인하고 바로 대결할 수 있습니다</p></div>
   <div class="join-box"><input id="friendNick" maxlength="12" placeholder="내 닉네임"><button id="friendOnline">닉네임 변경</button></div>
-  <div id="friendList" class="friend-list"><div class="lobby-note">현재 온라인인 플레이어를 불러오는 중...</div></div>
+  <div class="friend-tabs"><button id="tabMyFriends" class="active">내 친구</button><button id="tabOnlineUsers">접속자</button></div>
+  <div id="friendList" class="friend-list"><div class="lobby-note">친구 목록을 불러오는 중...</div></div>
   <div id="challengeBox"></div>
  </div>
 </div>
+<div id="profileModal" class="modal"><div class="modalbox"><h2 id="profileName">프로필</h2><div id="profileBody"></div><div id="profileActions"></div></div></div>
 <div id="aiSetup" class="lobby-screen hidden">
   <div class="lobby-shell small">
     <button class="backbtn" id="aiBack">← 로비</button>
@@ -453,7 +461,7 @@ body.friend-online #autoPlay,body.friend-online #gameSpeed{display:none!importan
     </div>
   </div>
 </div>
-<div id="gameApp" class="hidden"><div class="wrap"><div class="top"><div><b>🌍 WORLD TOUR</b><div style="font-size:11px;color:#91a8ba">세계 도시를 사고 건설하는 40칸 보드게임</div></div><div class="top-actions"><button id="keyInfo" class="key-info-btn">🔑 황금열쇠</button><button id="reset">새 게임</button><button id="exitGame" class="exit-game">게임 나가기</button></div></div><div class="game"><div class="board" id="board"><div class="center"><div style="font-size:11px;color:#78bfe8;font-weight:900;letter-spacing:2px;margin-bottom:6px">WORLD TOUR</div><div class="turn" id="turn"></div><div class="dice" id="dice">⚀ ⚀</div><div class="status" id="status"></div><div class="actions"><button class="primary" id="roll">🎲 굴리기</button><button id="buy" style="display:none">증서 구매</button><button id="end" style="display:none">턴 종료</button><button id="landInfo">땅 정보</button><button id="sellLand">땅 매각</button><button id="autoPlay" class="auto-btn">▶ 자동플레이</button>
+<div id="gameApp" class="hidden"><div class="wrap"><div class="top"><div><b>🌍 WORLD TOUR</b><div style="font-size:11px;color:#91a8ba">세계 도시를 사고 건설하는 40칸 보드게임</div></div><div class="top-actions"><button id="keyInfo" class="key-info-btn">🔑 황금열쇠</button><button id="reset">새 게임</button><button id="exitGame" class="exit-game">게임 나가기</button></div></div><div class="game"><div class="board" id="board"><div class="center"><div style="font-size:11px;color:#78bfe8;font-weight:900;letter-spacing:2px;margin-bottom:6px">WORLD TOUR</div><div class="turn" id="turn"></div><div class="dice" id="dice">⚀ ⚀</div><div class="status" id="status"></div><div class="actions"><button class="primary" id="roll">🎲 굴리기</button><button id="buy" style="display:none">증서 구매</button><button id="end">턴 종료</button><button id="landInfo">땅 정보</button><button id="sellLand">땅 매각</button><button id="autoPlay" class="auto-btn">▶ 자동플레이</button>
 <select id="gameSpeed" class="speed-select" aria-label="게임 속도">
 <option value="1">1배속</option><option value="2">2배속</option><option value="3">3배속</option><option value="4">4배속</option><option value="10">10배속</option>
 </select></div></div></div><div class="side"><div class="card"><h3>플레이어</h3><div id="players"></div></div><div class="card"><h3>증서 정보</h3><div id="info" style="font-size:11px;color:#a9bac7">도시를 눌러 확인</div></div><div class="card chatcard"><h3>채팅</h3><div id="chatMessages" class="chat-messages"></div><div class="chat-send"><input id="chatInput" maxlength="80" placeholder="메시지"><button id="chatSend">전송</button></div></div>
@@ -599,7 +607,7 @@ if(p.jail){
    if(p.jail>0){
  status(`무인도 탈출 실패 · ${p.jail}턴 남음`);log(p.name+' 무인도 탈출 실패');ui();
  if(gameMode==='friend'){await pushOnlineGame();onlineRolling=false;}
- if(gameMode==='ai'&&turn)setTimeout(end,Math.max(20,500/gameSpeed));
+ rollLock=false;
  return
 }
    status('3턴 경과로 무인도 탈출');log(p.name+' 무인도 자동 탈출');
@@ -616,7 +624,9 @@ if(gameMode==='friend'){
 }
 rollLock=false;
 if(gameMode==='friend')scheduleAutoEnd();
-else if(gameMode==='ai'&&turn&&!over)setTimeout(ai,Math.max(20,400/gameSpeed));
+else if(gameMode==='ai'&&turn&&!over){
+   rollLock=false;ui();
+ }
 else scheduleAutoEnd();
 }
 async function land(){let p=P[turn],t=data[p.pos];inspect(t);log(`${p.name} → ${t.name}`);if(t.type==='CITY'||t.type==='SPECIAL'){if(t.owner>=0&&t.owner!==turn){
@@ -739,10 +749,8 @@ function offerWorldTravel(fromCard=false){
  document.getElementById('modal').classList.add('show');
 }
 function aiWorldTravel(fromCard=false){
- const p=P[turn],free=arguments[0]||worldTravelFree(turn),fee=free?0:200000;
- if(!free&&p.money<fee){status(`🌍 세계여행 비용 ${won(fee)} 부족 · 이용하지 않음`);log(p.name+' 세계여행 이용 불가');ui();scheduleAutoEnd(500);return;}
  const p=P[turn],free=fromCard||worldTravelFree(turn),fee=free?0:200000;
- if(!free&&p.money<fee){end();return}
+ if(!free&&p.money<fee){status(`🌍 세계여행 비용 ${won(fee)} 부족 · 이용하지 않음`);log(p.name+' 세계여행 이용 불가');ui();scheduleAutoEnd(500);return;}
  const targets=worldTargets();
  // Prefer an affordable unowned property; otherwise a random own/unowned property to avoid knowingly paying huge tolls.
  let safe=targets.filter(t=>t.owner<0||t.owner===turn);
@@ -902,33 +910,40 @@ function showSellModal(required=false){
 
 let autoEndTimer=null;
 function scheduleAutoEnd(delay=650){
+ // 수동 턴 종료 방식: 자동으로 턴을 넘기지 않는다.
  clearTimeout(autoEndTimer);
- autoEndTimer=setTimeout(async()=>{
-  if(over||!rolled)return;
-  if(document.getElementById('modal').classList.contains('show'))return;
-  rollLock=false;
-  if(gameMode==='friend'){
-    if(turn!==onlinePlayerIndexFromCurrent())return;
-    rollLock=false;await onlineEndTurn();
-  }else{
-    rollLock=false;end();
-  }
- },delay);
+ rollLock=false;
+ ui();
 }
 
 function end(){
  if(over)return;
- if(dbl&&!P[turn].dead){
-   rolled=false;dbl=false;status('더블! 한 번 더 굴립니다.');ui();
-   if(turn||autoPlay)setTimeout(roll,Math.max(20,450/gameSpeed));
+ if(gameMode==='friend'){
+   if(!rolled){status('먼저 주사위를 굴려주세요.');return}
+   rollLock=false;
+   onlineEndTurn();
    return;
  }
- do turn=(turn+1)%gameCount;while(!P[turn]||P[turn].dead);
- rolled=false;dbl=false;status('주사위를 굴리세요.');ui();
- if(turn||autoPlay)setTimeout(roll,Math.max(20,500/gameSpeed));
+ let p=P[turn];
+ if(!rolled){status('먼저 주사위를 굴려주세요.');return}
+ if(dbl&&!p.dead){rolled=false;dbl=false;rollLock=false;status('더블! 한 번 더 굴립니다.');ui();return}
+ do turn=(turn+1)%gameCount;while(P[turn]?.dead);
+ rolled=false;dbl=false;rollLock=false;status('주사위를 굴리세요.');ui();
+ if(gameMode==='ai'&&turn&&!over)setTimeout(()=>ai(),Math.max(100,450/gameSpeed));
 }
-function ai(){
+
+async function ai(){
+ if(gameMode!=='ai'||over||turn===0)return;
+ if(rollLock)return;
+ // AI의 실제 턴: 반드시 주사위를 굴린다. 구매/건설 판단은 land() 이후 처리된다.
+ status(`${P[turn].name}의 차례`);
+ ui();
+ await wait(Math.max(120,500/gameSpeed));
+ if(gameMode!=='ai'||over||turn===0)return;
+ await roll();
+ // roll()이 끝나면 AI의 구매/건설 판단
  let p=P[turn],t=data[p.pos];
+ if(!p||p.dead)return;
  const reserve=Math.max(180000,Math.floor(p.money*.18));
  if((t.type==='CITY'||t.type==='SPECIAL')&&t.owner<0){
    const maxRent=t.type==='CITY'?t.rents[4]:t.rents[0];
@@ -940,7 +955,9 @@ function ai(){
    const goodReturn=gain/Math.max(1,x)>.35;
    if(p.money-x>=reserve && (goodReturn||Math.random()<.4)) build(l);
  }
- setTimeout(end,Math.max(20,500/gameSpeed));
+ // 수동 턴 종료는 사람에게만 적용. AI는 행동 후 스스로 종료한다.
+ await wait(Math.max(100,450/gameSpeed));
+ if(gameMode==='ai'&&turn!==0&&!over&&rolled)end();
 }
 
 function showLandInfo(){
@@ -1018,7 +1035,7 @@ document.querySelectorAll('#roomSetup .count-btn').forEach(b=>b.onclick=()=>{
  document.getElementById('roomSlots').innerHTML=Array.from({length:n},(_,i)=>i===0
   ? `<div class="room-slot"><span>🔵 나</span><span class="host-tag">방장</span></div>`
   : `<div class="room-slot empty"><span>빈 자리</span><span>친구 대기 중</span></div>`).join('');
- const st=document.getElementById('startRoom');st.disabled=true;st.classList.remove('ready');st.textContent='친구를 기다리는 중...';
+ const st=document.getElementById('startRoom');st.disabled=false;st.classList.remove('ready');st.textContent='친구를 기다리는 중...';
  screen('waitingRoom');
 });
 document.getElementById('copyCode').onclick=async()=>{
@@ -1126,37 +1143,89 @@ function makeRoomCode(){return Math.random().toString(36).slice(2,8).toUpperCase
 function onlineName(){return '플레이어 '+makePlayerId().slice(-4).toUpperCase()}
 
 
-let presenceRef=null,presenceListener=null,challengeListener=null;
+let presenceRef=null,presenceListener=null,challengeListener=null,friendMode='friends',presenceCache={};
 function myNick(){return (localStorage.getItem('wtNick')||'').trim()}
+function fmtLast(ts){
+ if(!ts)return '접속 기록 없음';
+ const d=new Date(ts),diff=Date.now()-ts;
+ if(diff<60000)return '방금 전 접속';
+ if(diff<3600000)return `${Math.floor(diff/60000)}분 전 접속`;
+ if(diff<86400000)return `${Math.floor(diff/3600000)}시간 전 접속`;
+ return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} 마지막 접속`;
+}
 async function goOnline(silent=false){
  onlinePlayerId=makePlayerId();
  let input=document.getElementById('friendNick');
  let nick=(input?.value.trim()||myNick()||('플레이어 '+onlinePlayerId.slice(-4))).slice(0,12);
- localStorage.setItem('wtNick',nick);
- if(input)input.value=nick;
- if(presenceRef)try{await presenceRef.remove()}catch(e){}
- presenceRef=rtdb.ref('presence/'+onlinePlayerId);
- await presenceRef.set({name:nick,online:true,at:firebase.database.ServerValue.TIMESTAMP});
- presenceRef.onDisconnect().remove();
- watchPresence();watchChallenges();
+ localStorage.setItem('wtNick',nick);if(input)input.value=nick;
+ presenceRef=rtdb.ref('users/'+onlinePlayerId);
+ await presenceRef.update({name:nick,online:true,lastSeen:firebase.database.ServerValue.TIMESTAMP});
+ presenceRef.onDisconnect().update({online:false,lastSeen:firebase.database.ServerValue.TIMESTAMP});
+ watchPresence();watchChallenges();renderFriendList();
  if(!silent)statusFriend(`🟢 ${nick}으로 온라인`);
 }
 function statusFriend(msg){
  const box=document.getElementById('challengeBox');if(box&&!box.querySelector('.friend-row'))box.innerHTML=`<div class="lobby-note">${escapeHtml(msg)}</div>`;
 }
 function watchPresence(){
- presenceListener=rtdb.ref('presence').on('value',snap=>{
-  const list=document.getElementById('friendList');if(!list)return;list.innerHTML='';
-  const all=snap.val()||{};Object.entries(all).filter(([id])=>id!==onlinePlayerId).forEach(([id,u])=>{
-   const row=document.createElement('div');row.className='friend-row';row.innerHTML=`<span>🟢 ${escapeHtml(u.name||'친구')}</span><button>도전</button>`;
-   row.querySelector('button').onclick=()=>sendChallenge(id,u.name);list.appendChild(row);
-  });
-  if(!list.children.length)list.innerHTML='<div class="lobby-note">현재 접속 중인 다른 플레이어가 없습니다.</div>';
- });
+ if(presenceListener)rtdb.ref('users').off('value',presenceListener);
+ presenceListener=rtdb.ref('users').on('value',snap=>{presenceCache=snap.val()||{};renderFriendList()});
+}
+async function getFriendIds(){
+ const snap=await rtdb.ref(`friends/${onlinePlayerId}`).once('value');
+ return Object.keys(snap.val()||{});
+}
+async function renderFriendList(){
+ const list=document.getElementById('friendList');if(!list||!onlinePlayerId)return;
+ list.innerHTML='<div class="lobby-note">불러오는 중...</div>';
+ let ids=friendMode==='online'
+   ? Object.keys(presenceCache).filter(id=>id!==onlinePlayerId&&presenceCache[id]?.online)
+   : await getFriendIds();
+ list.innerHTML='';
+ ids.sort((a,b)=>(presenceCache[b]?.online?1:0)-(presenceCache[a]?.online?1:0));
+ for(const id of ids){
+   const u=presenceCache[id]||{},online=!!u.online,name=u.name||('플레이어 '+id.slice(-4));
+   const row=document.createElement('div');row.className='friend-row';
+   row.innerHTML=`<div class="friend-main"><div class="friend-avatar">${escapeHtml(name.slice(0,1).toUpperCase())}</div><div><b>${escapeHtml(name)}</b><div class="friend-meta"><span class="${online?'online-dot':'offline-dot'}">● ${online?'온라인':'오프라인'}</span>${online?'':` · ${fmtLast(u.lastSeen)}`}</div></div></div><div class="friend-actions">${friendMode==='online'?'<button class="addFriend">친구 추가</button>':''}${online?'<button class="challengeFriend">대결</button>':''}</div>`;
+   row.onclick=e=>{if(!e.target.closest('button'))openFriendProfile(id)};
+   row.querySelector('.addFriend')?.addEventListener('click',e=>{e.stopPropagation();addFriend(id,name)});
+   row.querySelector('.challengeFriend')?.addEventListener('click',e=>{e.stopPropagation();sendChallenge(id,name)});
+   list.appendChild(row);
+ }
+ if(!ids.length)list.innerHTML=`<div class="lobby-note">${friendMode==='friends'?'아직 추가한 친구가 없습니다. 접속자 탭에서 친구를 추가해보세요.':'현재 온라인인 다른 플레이어가 없습니다.'}</div>`;
+}
+async function addFriend(id,name){
+ await rtdb.ref(`friends/${onlinePlayerId}/${id}`).set({since:firebase.database.ServerValue.TIMESTAMP});
+ await rtdb.ref(`friends/${id}/${onlinePlayerId}`).set({since:firebase.database.ServerValue.TIMESTAMP});
+ alert(`${name}님을 친구로 추가했습니다.`);friendMode='friends';setFriendTab();renderFriendList();
+}
+async function removeFriend(id,name){
+ await rtdb.ref(`friends/${onlinePlayerId}/${id}`).remove();
+ await rtdb.ref(`friends/${id}/${onlinePlayerId}`).remove();
+ document.getElementById('profileModal').classList.remove('show');renderFriendList();
+}
+async function isFriend(id){
+ return (await rtdb.ref(`friends/${onlinePlayerId}/${id}`).once('value')).exists();
+}
+async function openFriendProfile(id){
+ const u=presenceCache[id]||{},name=u.name||('플레이어 '+id.slice(-4)),online=!!u.online,fr=await isFriend(id);
+ document.getElementById('profileName').textContent=`👤 ${name}`;
+ document.getElementById('profileBody').innerHTML=`<div style="padding:10px 0"><b class="${online?'online-dot':'offline-dot'}">● ${online?'온라인':'오프라인'}</b><br><span class="friend-meta">${online?'현재 접속 중':fmtLast(u.lastSeen)}</span></div>`;
+ const a=document.getElementById('profileActions');a.innerHTML='';
+ if(!fr){let x=document.createElement('button');x.textContent='친구 추가';x.onclick=async()=>{await addFriend(id,name);openFriendProfile(id)};a.appendChild(x)}
+ else{let x=document.createElement('button');x.textContent='친구 삭제';x.onclick=()=>removeFriend(id,name);a.appendChild(x)}
+ if(online){let x=document.createElement('button');x.textContent='⚔️ 대결 신청';x.onclick=()=>sendChallenge(id,name);a.appendChild(x)}
+ let close=document.createElement('button');close.textContent='닫기';close.onclick=()=>document.getElementById('profileModal').classList.remove('show');a.appendChild(close);
+ document.getElementById('profileModal').classList.add('show');
+}
+function setFriendTab(){
+ document.getElementById('tabMyFriends')?.classList.toggle('active',friendMode==='friends');
+ document.getElementById('tabOnlineUsers')?.classList.toggle('active',friendMode==='online');
 }
 async function sendChallenge(id,name){
+ if(!presenceCache[id]?.online){alert(`${name}님은 현재 오프라인입니다.`);return}
  await rtdb.ref(`challenges/${id}/${onlinePlayerId}`).set({from:onlinePlayerId,name:myNick()||'플레이어',at:firebase.database.ServerValue.TIMESTAMP});
- alert(`${name}에게 도전 신청을 보냈습니다.`);
+ alert(`${name}님에게 대결 신청을 보냈습니다.`);
 }
 function watchChallenges(){
  if(challengeListener)rtdb.ref(`challenges/${onlinePlayerId}`).off('child_added',challengeListener);
@@ -1171,7 +1240,6 @@ function watchChallenges(){
   };
   document.getElementById('acceptChallenge').onclick=accept;
   document.getElementById('declineChallenge').onclick=async()=>{await snap.ref.remove();box.innerHTML=''};
-  if(document.visibilityState==='visible' && confirm(`${c.name}님이 친구 대전을 신청했습니다. 수락할까요?`))await accept();
  });
  rtdb.ref(`challengeAccept/${onlinePlayerId}`).on('value',async snap=>{
   const v=snap.val();if(!v?.code)return;
@@ -1190,7 +1258,7 @@ async function createOnlineRoom(maxPlayers){
  await rtdb.ref('rooms/'+code).set({
    host:onlinePlayerId,maxPlayers:Number(maxPlayers)||4,status:'waiting',
    createdAt:firebase.database.ServerValue.TIMESTAMP,turnIndex:0,turnSeq:0,
-   players:{[onlinePlayerId]:{name:'나',joinedAt:firebase.database.ServerValue.TIMESTAMP}}
+   players:{[onlinePlayerId]:{name:myNick()||onlineName(),joinedAt:firebase.database.ServerValue.TIMESTAMP}}
  });
 
  localStorage.setItem('wtOnlineRoom',code);localStorage.setItem('wtOnlineRole','host');
@@ -1206,7 +1274,7 @@ async function joinOnlineRoom(code){
  if(room.status!=='waiting')throw new Error('이미 시작된 방입니다.');
  if(players.length>=room.maxPlayers)throw new Error('방이 가득 찼습니다.');
  onlinePlayerId=makePlayerId();onlineRoomCode=code;
- await ref.child('players/'+onlinePlayerId).set({name:onlineName(),joinedAt:firebase.database.ServerValue.TIMESTAMP});
+ await ref.child('players/'+onlinePlayerId).set({name:myNick()||onlineName(),joinedAt:firebase.database.ServerValue.TIMESTAMP});
 
  localStorage.setItem('wtOnlineRoom',code);localStorage.setItem('wtOnlineRole','guest');
  watchOnlineRoom(code);watchChat(code);return room;
@@ -1245,12 +1313,15 @@ const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=
    const start=document.getElementById('startRoom');
    if(start){
      const host=room.host===onlinePlayerId;
-     start.disabled=!host||entries.length<room.maxPlayers;
-     start.textContent=host?(entries.length<room.maxPlayers?`친구를 기다리는 중... (${entries.length}/${room.maxPlayers})`:'게임 시작'):'방장이 시작하기를 기다리는 중...';
+     start.disabled=false;
+     const ready=host&&entries.length>=Number(room.maxPlayers||2);
+     start.classList.toggle('ready',ready);
+     start.textContent=host?(ready?'게임 시작':`친구를 기다리는 중... (${entries.length}/${room.maxPlayers})`):'방장이 시작하기를 기다리는 중...';
    }
    if(room.status==='playing'){
      if(!room.players || !room.players[onlinePlayerId]){localStorage.removeItem('wtOnlineRoom');localStorage.removeItem('wtOnlineRole');return}
      gameMode='friend';gameCount=entries.length;
+     if(!chatListener)watchChat(code);
      if(!document.body.classList.contains('friend-online')){screen('gameApp');document.body.classList.add('friend-online')}
      if(room.game){
        // 내가 말을 움직이는 도중에는 내 Firebase echo로 P 배열을 갈아끼우지 않는다.
@@ -1322,18 +1393,44 @@ function applyRemoteGame(g,room){
 
 
 function watchChat(code){
- if(chatListener)rtdb.ref(`rooms/${code}/chat`).off('child_added',chatListener);
+ const ref=rtdb.ref(`rooms/${code}/chat`);
+ if(chatListener&&chatListener.ref&&chatListener.cb){
+   try{chatListener.ref.off('value',chatListener.cb)}catch(e){}
+ }
  const box=document.getElementById('chatMessages');if(box)box.innerHTML='';
- chatListener=rtdb.ref(`rooms/${code}/chat`).limitToLast(40).on('child_added',snap=>{
-  const m=snap.val(),box=document.getElementById('chatMessages');if(!box||!m)return;
-  const d=document.createElement('div');d.className='chat-line';d.innerHTML=`<b>${escapeHtml(m.name||'플레이어')}</b> ${escapeHtml(m.text||'')}`;box.appendChild(d);box.scrollTop=box.scrollHeight;
- });
+ const cb=snap=>{
+   const box=document.getElementById('chatMessages');if(!box)return;
+   box.innerHTML='';
+   const rows=[];
+   snap.forEach(ch=>{const m=ch.val();if(m)rows.push(m)});
+   rows.sort((a,b)=>(a.at||0)-(b.at||0)).slice(-40).forEach(m=>{
+     const d=document.createElement('div');d.className='chat-line';
+     d.innerHTML=`<b>${escapeHtml(m.name||'플레이어')}</b> ${escapeHtml(m.text||'')}`;
+     box.appendChild(d);
+   });
+   box.scrollTop=box.scrollHeight;
+ };
+ ref.limitToLast(40).on('value',cb);
+ chatListener={ref,cb};
 }
 function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function sendChat(){
- const input=document.getElementById('chatInput'),text=input.value.trim();if(!text||!onlineRoomCode)return;
- const room=latestOnlineRoom,idx=room?onlinePlayerIndex(room):-1,name=idx>=0?orderedOnlinePlayers(room)[idx][1].name:'플레이어';
- input.value='';await rtdb.ref(`rooms/${onlineRoomCode}/chat`).push({name,text,at:firebase.database.ServerValue.TIMESTAMP});
+ const input=document.getElementById('chatInput');
+ const msg=(input?.value||'').trim();
+ if(!msg)return;
+ if(!onlineRoomCode){alert('친구 대전 방에 들어간 뒤 채팅할 수 있습니다.');return}
+ try{
+   let name=myNick()||onlineName();
+   if(latestOnlineRoom){
+     const me=onlinePlayerIndex(latestOnlineRoom);
+     const arr=orderedOnlinePlayers(latestOnlineRoom);
+     if(me>=0&&arr[me])name=arr[me][1].name||name;
+   }
+   await rtdb.ref(`rooms/${onlineRoomCode}/chat`).push({
+     playerId:onlinePlayerId,name,text:msg,at:firebase.database.ServerValue.TIMESTAMP
+   });
+   input.value='';
+ }catch(err){alert('채팅 전송 실패: '+err.message)}
 }
 
 function orderedOnlinePlayers(room){
@@ -1357,6 +1454,8 @@ function applyOnlineTurn(room){
 }
 async function onlineEndTurn(){
  if(gameMode!=='friend'||!onlineRoomCode)return false;
+ if(!rolled){status('먼저 주사위를 굴려주세요.');return false}
+ rollLock=false;
  const snap=await rtdb.ref('rooms/'+onlineRoomCode).once('value'),room=snap.val();
  if(!room)return false;
  const arr=orderedOnlinePlayers(room),me=onlinePlayerIndex(room);
@@ -1395,10 +1494,12 @@ window.addEventListener('load',()=>{
  const fs=document.getElementById('openFriends');if(fs)fs.onclick=async()=>{
    screen('friendLobby');
    document.getElementById('friendNick').value=myNick();
-   try{await goOnline(true)}catch(e){alert('친구 목록 연결 실패: '+e.message)}
+   try{friendMode='friends';setFriendTab();await goOnline(true)}catch(e){alert('친구 목록 연결 실패: '+e.message)}
  };
  const fb=document.getElementById('friendBack');if(fb)fb.onclick=()=>screen('lobby');
  const fo=document.getElementById('friendOnline');if(fo)fo.onclick=()=>goOnline(false);
+ const tm=document.getElementById('tabMyFriends');if(tm)tm.onclick=()=>{friendMode='friends';setFriendTab();renderFriendList()};
+ const to=document.getElementById('tabOnlineUsers');if(to)to.onclick=()=>{friendMode='online';setFriendTab();renderFriendList()};
  const cs=document.getElementById('chatSend');if(cs)cs.onclick=sendChat;
  const ci=document.getElementById('chatInput');if(ci)ci.onkeydown=e=>{if(e.key==='Enter')sendChat()};
  // 새로 사이트를 열면 항상 로비부터 시작한다.
@@ -1433,8 +1534,7 @@ window.addEventListener('load',()=>{
      alert('방 참가 실패: '+err.message);
    }
  };
- const start=document.getElementById('startRoom');
- if(start)start.onclick=startOnlineGame;
+ 
 });
 </script>
 
@@ -1450,10 +1550,10 @@ window.addEventListener('load',()=>{
    if(!arr.length||arr[idx][0]!==onlinePlayerId){e.preventDefault();e.stopImmediatePropagation();status('지금은 내 차례가 아닙니다.');}
  },true);
  const eb=document.getElementById('end');
- if(eb)eb.addEventListener('click',async e=>{
-   if(gameMode!=='friend'||!onlineRoomCode)return;
-   e.preventDefault();e.stopImmediatePropagation();
-   await onlineEndTurn();
+ if(eb)eb.addEventListener('click',e=>{
+   if(gameMode==='friend'&&latestOnlineRoom&&turn!==onlinePlayerIndex(latestOnlineRoom)){
+     e.preventDefault();e.stopImmediatePropagation();status('지금은 상대 차례입니다.');
+   }
  },true);
 });
 </script>
@@ -1485,10 +1585,23 @@ window.addEventListener('load',()=>{
      const count=Object.keys(room.players||{}).length;
      if(room.host!==onlinePlayerId)return alert('방장만 게임을 시작할 수 있습니다.');
      if(count<Number(room.maxPlayers||2))return alert(`아직 인원이 부족합니다. (${count}/${room.maxPlayers||2})`);
-     start.disabled=true;
+     if(start.dataset.busy==='1')return;start.dataset.busy='1';
      await startOnlineGame();
-   }catch(err){start.disabled=false;alert('게임 입장 실패: '+err.message)}
+     start.dataset.busy='0';
+   }catch(err){start.dataset.busy='0';alert('게임 입장 실패: '+err.message)}
  },true);
+});
+</script>
+
+
+<script>
+window.addEventListener('load',()=>{
+ const eb=document.getElementById('end');
+ if(eb)eb.onclick=end;
+ const send=document.getElementById('chatSend');
+ if(send)send.onclick=sendChat;
+ const input=document.getElementById('chatInput');
+ if(input)input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();sendChat()}});
 });
 </script>
 
