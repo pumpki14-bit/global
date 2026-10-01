@@ -421,6 +421,10 @@ body.friend-online #autoPlay,body.friend-online #gameSpeed{display:none!importan
 .die3d .tl{left:10px;top:10px}.die3d .tc{left:19px;top:10px}.die3d .tr{right:10px;top:10px}
 .die3d .ml{left:10px;top:19px}.die3d .mc{left:19px;top:19px}.die3d .mr{right:10px;top:19px}
 .die3d .bl{left:10px;bottom:10px}.die3d .bc{left:19px;bottom:10px}.die3d .br{right:10px;bottom:10px}
+
+.spectator-badge{position:absolute;right:12px;top:58px;z-index:25;background:#0b1c29dd;border:1px solid #35566d;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800}
+.spectating .controls button,.spectating #sellLand,.spectating #autoPlay,.spectating #gameSpeed{pointer-events:none;opacity:.45}
+.friend-request{border-color:#47708a!important}
 </style></head>
 <body>
 <div id="lobby" class="lobby-screen">
@@ -429,7 +433,7 @@ body.friend-online #autoPlay,body.friend-online #gameSpeed{display:none!importan
     <div class="lobby-card">
       <button class="lobby-main" id="openRoom">👥 방 만들기 <span>2 · 3 · 4인</span></button>
       <button class="lobby-main join" id="openJoin">🔗 방 참가 <span>코드 입력</span></button><button class="lobby-main" id="openPublic">🌐 공개방 <span>코드 없이 참가</span></button>
-      <button class="lobby-main" id="openFriends">🧑‍🤝‍🧑 친구 <span>접속 중인 친구에게 도전</span></button><button class="lobby-main ai" id="openAI">🤖 AI 대전 <span>바로 시작</span></button>
+      <button class="lobby-main" id="openFriends">🧑‍🤝‍🧑 친구 <span>친구 목록 · 온라인 상태 · 대전</span></button><button class="lobby-main" id="openSpectate">👁️ 관전 <span>진행 중인 공개 게임 보기</span></button><button class="lobby-main ai" id="openAI">🤖 AI 대전 <span>바로 시작</span></button>
     </div>
     <div class="lobby-note">친구 대전은 인원 선택 후 대기방으로 이동합니다.</div>
   </div>
@@ -494,6 +498,14 @@ body.friend-online #autoPlay,body.friend-online #gameSpeed{display:none!importan
  </div>
 </div>
 <div id="profileModal" class="modal"><div class="modalbox"><h2 id="profileName">프로필</h2><div id="profileBody"></div><div id="profileActions"></div></div></div>
+<div id="spectateLobby" class="lobby-screen hidden">
+ <div class="lobby-shell small">
+  <button class="backbtn" id="spectateBack">← 로비</button>
+  <div class="lobby-brand compact"><h1>👁️ 관전</h1><p>현재 진행 중인 공개 게임</p></div>
+  <button id="refreshSpectate">새로고침</button>
+  <div id="spectateList" class="public-list"><div class="lobby-note">게임을 불러오는 중...</div></div>
+ </div>
+</div>
 <div id="aiSetup" class="lobby-screen hidden">
   <div class="lobby-shell small">
     <button class="backbtn" id="aiBack">← 로비</button>
@@ -1153,6 +1165,7 @@ document.querySelectorAll('.ai-count').forEach(b=>b.onclick=()=>{
 
 
 function exitAIGame(){
+ if(spectating){stopSpectating();screen('lobby');return}
  if(gameMode!=='ai')return;
  document.getElementById('mh').textContent='게임에서 나갈까요?';
  document.getElementById('mb').innerHTML='현재 진행 중인 AI 대전은 종료되고 로비로 돌아갑니다.';
@@ -1265,7 +1278,7 @@ async function goOnline(silent=false){
  presenceRef=rtdb.ref('users/'+onlinePlayerId);
  await presenceRef.update({name:nick,online:true,lastSeen:firebase.database.ServerValue.TIMESTAMP});
  presenceRef.onDisconnect().update({online:false,lastSeen:firebase.database.ServerValue.TIMESTAMP});
- watchPresence();watchChallenges();renderFriendList();
+ watchPresence();watchChallenges();watchFriendRequests();renderFriendList();
  if(!silent)statusFriend(`🟢 ${nick}으로 온라인`);
 }
 function statusFriend(msg){
@@ -1299,9 +1312,10 @@ async function renderFriendList(){
  if(!ids.length)list.innerHTML=`<div class="lobby-note">${friendMode==='friends'?'아직 추가한 친구가 없습니다. 접속자 탭에서 친구를 추가해보세요.':'현재 온라인인 다른 플레이어가 없습니다.'}</div>`;
 }
 async function addFriend(id,name){
- await rtdb.ref(`friends/${onlinePlayerId}/${id}`).set({since:firebase.database.ServerValue.TIMESTAMP});
- await rtdb.ref(`friends/${id}/${onlinePlayerId}`).set({since:firebase.database.ServerValue.TIMESTAMP});
- alert(`${name}님을 친구로 추가했습니다.`);friendMode='friends';setFriendTab();renderFriendList();
+ await rtdb.ref(`friendRequests/${id}/${onlinePlayerId}`).set({
+   from:onlinePlayerId,name:myNick()||onlineName(),at:firebase.database.ServerValue.TIMESTAMP
+ });
+ alert(`${name}님에게 친구 요청을 보냈습니다.`);
 }
 async function removeFriend(id,name){
  await rtdb.ref(`friends/${onlinePlayerId}/${id}`).remove();
@@ -1351,6 +1365,22 @@ function watchChallenges(){
   catch(e){alert('대전 입장 실패: '+e.message)}
  });
 }
+
+function watchFriendRequests(){
+ rtdb.ref(`friendRequests/${onlinePlayerId}`).on('child_added',snap=>{
+  const r=snap.val();if(!r)return;
+  const box=document.getElementById('challengeBox');if(!box)return;
+  const row=document.createElement('div');row.className='friend-row friend-request';
+  row.innerHTML=`<span>👥 ${escapeHtml(r.name||'플레이어')}님의 친구 요청</span><span><button class="acceptF">수락</button> <button class="declineF">거절</button></span>`;
+  row.querySelector('.acceptF').onclick=async()=>{
+    await rtdb.ref(`friends/${onlinePlayerId}/${r.from}`).set({since:firebase.database.ServerValue.TIMESTAMP});
+    await rtdb.ref(`friends/${r.from}/${onlinePlayerId}`).set({since:firebase.database.ServerValue.TIMESTAMP});
+    await snap.ref.remove();row.remove();renderFriendList();
+  };
+  row.querySelector('.declineF').onclick=async()=>{await snap.ref.remove();row.remove()};
+  box.appendChild(row);
+ });
+}
 async function createOnlineRoom(maxPlayers){
  onlinePlayerId=makePlayerId();
  let code, snap;
@@ -1392,6 +1422,8 @@ function watchOnlineRoom(code){
    if(!snap.exists()){screen('lobby');return}
    
 const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=room;
+   const sb=document.getElementById('spectatorBadge');
+   if(sb){const sc=Object.keys(room.spectators||{}).length;sb.style.display='';sb.textContent=`👁️ 관전자 ${sc}명`;}
    if(room.game?.lastPayment?.at>lastPaymentSeen){
      const ev=room.game.lastPayment;lastPaymentSeen=ev.at;
      const me=onlinePlayerIndex(room);
@@ -1466,6 +1498,7 @@ async function restoreOnlineRoom(){
 
 
 let applyingRemoteGame=false,latestOnlineRoom=null,onlineRolling=false,rollLock=false;
+let spectating=false,spectatorId=null,spectatorRoomCode=null,spectatorListener=null;
 function onlinePlayerIndexFromCurrent(){return latestOnlineRoom?onlinePlayerIndex(latestOnlineRoom):0}
 function onlinePlayerIndex(room,id=onlinePlayerId){
  const arr=orderedOnlinePlayers(room); return arr.findIndex(([pid])=>pid===id);
@@ -1533,6 +1566,7 @@ async function resetChat(){
  }
 }
 async function sendChat(){
+ if(spectating){alert('관전 중에는 채팅을 보낼 수 없습니다.');return}
  const input=document.getElementById('chatInput');
  const msg=(input?.value||'').trim();
  if(!msg)return;
@@ -1672,7 +1706,7 @@ window.addEventListener('load',()=>{
 });
 </script>
 
-<div id="onlineTurnBanner" class="turn-banner" style="display:none"></div>
+<div id="onlineTurnBanner" class="turn-banner" style="display:none"></div><div id="spectatorBadge" class="spectator-badge" style="display:none">👁️ 관전자 0명</div>
 
 <script>
 window.addEventListener('load',()=>{
@@ -1761,6 +1795,65 @@ window.addEventListener('load',()=>{
  const op=document.getElementById('openPublic');if(op)op.onclick=()=>{screen('publicLobby');loadPublicRooms()};
  const pb=document.getElementById('publicBack');if(pb)pb.onclick=()=>screen('lobby');
  const rp=document.getElementById('refreshPublic');if(rp)rp.onclick=loadPublicRooms;
+});
+</script>
+<script>
+async function loadSpectateGames(){
+ const box=document.getElementById('spectateList');if(!box)return;
+ box.innerHTML='<div class="lobby-note">진행 중인 게임을 불러오는 중...</div>';
+ try{
+  const snap=await rtdb.ref('rooms').once('value'),rooms=snap.val()||{};
+  const live=Object.entries(rooms).filter(([code,r])=>r&&r.status==='playing'&&r.public===true&&r.game);
+  box.innerHTML='';
+  live.sort((a,b)=>(b[1].startedAt||0)-(a[1].startedAt||0)).forEach(([code,r])=>{
+    const players=orderedOnlinePlayers(r).map(x=>x[1]?.name||'플레이어').join(' vs ');
+    const watchers=Object.keys(r.spectators||{}).length;
+    const row=document.createElement('div');row.className='public-room';
+    row.innerHTML=`<div><b>🎮 ${escapeHtml(players)}</b><br><small>👁️ 관전자 ${watchers}명</small></div><button>관전</button>`;
+    row.querySelector('button').onclick=()=>startSpectating(code);
+    box.appendChild(row);
+  });
+  if(!live.length)box.innerHTML='<div class="lobby-note">현재 관전 가능한 공개 게임이 없습니다.</div>';
+ }catch(e){box.innerHTML=`<div class="lobby-note">관전 목록 불러오기 실패: ${escapeHtml(e.message)}</div>`}
+}
+async function startSpectating(code){
+ await stopSpectating();
+ spectating=true;spectatorRoomCode=code;
+ spectatorId='s_'+makePlayerId();
+ const ref=rtdb.ref(`rooms/${code}/spectators/${spectatorId}`);
+ await ref.set({name:myNick()||'관전자',joinedAt:firebase.database.ServerValue.TIMESTAMP});
+ ref.onDisconnect().remove();
+ screen('gameApp');document.getElementById('gameApp').classList.add('spectating');
+ document.getElementById('spectatorBadge').style.display='';
+ const roomRef=rtdb.ref(`rooms/${code}`);
+ spectatorListener=roomRef.on('value',snap=>{
+   const room=snap.val();
+   if(!room||room.status!=='playing'||!room.game){stopSpectating();screen('lobby');return}
+   latestOnlineRoom=room;gameMode='friend';gameCount=orderedOnlinePlayers(room).length;
+   applyRemoteGame(room.game,room);
+   const count=Object.keys(room.spectators||{}).length;
+   document.getElementById('spectatorBadge').textContent=`👁️ 관전자 ${count}명`;
+   const banner=document.getElementById('onlineTurnBanner');
+   if(banner){banner.style.display='';banner.textContent='👁️ 관전 중 — 게임 조작은 할 수 없습니다.'}
+ });
+ watchSpectatorChat(code);
+}
+function watchSpectatorChat(code){watchChat(code)}
+async function stopSpectating(){
+ if(!spectating)return;
+ try{
+  if(spectatorRoomCode&&spectatorId)await rtdb.ref(`rooms/${spectatorRoomCode}/spectators/${spectatorId}`).remove();
+  if(spectatorRoomCode&&spectatorListener)rtdb.ref(`rooms/${spectatorRoomCode}`).off('value',spectatorListener);
+ }catch(e){}
+ spectating=false;spectatorRoomCode=null;spectatorListener=null;
+ document.getElementById('gameApp')?.classList.remove('spectating');
+ const badge=document.getElementById('spectatorBadge');if(badge)badge.style.display='none';
+}
+
+window.addEventListener('load',()=>{
+ const o=document.getElementById('openSpectate');if(o)o.onclick=()=>{screen('spectateLobby');loadSpectateGames()};
+ const b=document.getElementById('spectateBack');if(b)b.onclick=()=>screen('lobby');
+ const r=document.getElementById('refreshSpectate');if(r)r.onclick=loadSpectateGames;
 });
 </script>
 </body></html>
