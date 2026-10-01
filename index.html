@@ -451,6 +451,12 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
 
 .inventory-card{padding:10px!important}.item-list{display:flex;flex-wrap:wrap;gap:6px}.item-btn{border:1px solid #617d91;border-radius:9px;padding:7px 9px;background:#132737;color:#eef7ff;font-weight:800}.item-btn:disabled{opacity:.45}.muted{font-size:11px;color:#8296a5}
 .waiting-chat{display:flex!important;visibility:visible!important;opacity:1!important;position:relative!important;z-index:10!important}.waiting-chat .chat-send{display:grid!important}
+
+.room-online-status{display:grid;grid-template-columns:auto 1fr;column-gap:8px;align-items:center;margin:8px 0 12px;padding:10px 12px;border:1px solid #385469;border-radius:11px;background:#0b1a26}
+.room-online-status small{grid-column:2;color:#91a8b8;margin-top:2px}.online-dot{width:10px;height:10px;border-radius:50%;background:#e2ad49;box-shadow:0 0 10px #e2ad49}
+.room-online-status.online .online-dot{background:#48d58b;box-shadow:0 0 10px #48d58b}.room-online-status.error .online-dot{background:#ef6674;box-shadow:0 0 10px #ef6674}
+.room-online-status.loading .online-dot{animation:onlinePulse .8s infinite alternate}@keyframes onlinePulse{to{opacity:.3}}
+.room-slot-online{font-size:10px;color:#62dda0;font-weight:900;margin-left:5px}
 </style></head>
 <body>
 <div id="lobby" class="lobby-screen">
@@ -487,6 +493,7 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
   <div class="lobby-shell small">
     <button class="backbtn" id="waitingBack">← 나가기</button>
     <div class="lobby-brand compact"><h1>대기방</h1><p id="roomCountText"></p></div>
+    <div id="roomOnlineStatus" class="room-online-status loading"><span class="online-dot"></span><b>서버 연결 확인 중...</b><small id="roomOnlineDetail">방 정보를 불러오는 중입니다.</small></div>
     <div class="room-code-box"><span>방 코드</span><b id="roomCode">------</b><button id="copyCode">코드 복사</button></div>
     <div id="roomSlots" class="room-slots"></div>
     <button class="start-room" id="startRoom">친구를 기다리는 중...</button>
@@ -638,7 +645,7 @@ let gameSettings={initialMoney:2200000,allowAuto:true,allowSpeed:true,doubleBoos
 function normalizeBoardData(){
  data.forEach((t,i)=>{
   if(!t)return;
-  if(!t.name)t.name=({START:'출발',KEY:'황금열쇠',ISLAND:'무인도',TRAVEL:'세계여행'}[t.type]||('칸 '+i));
+  if(t.type==='WORLD'||t.type==='TRAVEL')t.name='세계여행'; else if(!t.name)t.name=({START:'출발',KEY:'황금열쇠',ISLAND:'무인도'}[t.type]||('칸 '+i));
  });
 }
 normalizeBoardData();
@@ -649,7 +656,7 @@ function xy(i){
  if(i<=33)return[1,34-i];
  return[i-32,1];
 }
-function sym(t){return{START:'🏁',CITY:'',KEY:'🔑',ISLAND:'🏝️',FUND:'🏦',TRAVEL:'🚀',TRANS:'✈️',SPECIAL:'★'}[t.type]}
+function sym(t){if(!t)return '';return{START:'🏁',CITY:'',KEY:'🔑',ISLAND:'🏝️',FUND:'🏦',WORLD:'🌍',TRAVEL:'🌍',TRANS:'✈️',SPECIAL:'★'}[t.type]||''}
 function nameSize(name){
  const n=[...name].length;
  if(n>=8) return 6;
@@ -699,8 +706,8 @@ function showTileInfo(t){
  let html='';
  if(t.type==='CITY')html=`매입가 <b>${won(t.price)}</b><br>소유: <b>${t.owner<0?'은행':P[t.owner].name}</b><br>건물: ${['대지','별장 1채','별장 2채','빌딩','호텔'][t.bld]}<br>현재 통행료 <b>${won(rent(t))}</b>`;
  else if(t.type==='SPECIAL')html=`매입가 <b>${won(t.price)}</b><br>소유: <b>${t.owner<0?'은행':P[t.owner].name}</b><br>건설 불가<br>통행료 <b>${won(rent(t))}</b>`;
- else html=`${sym(t)} ${t.name}`;
- document.getElementById('mh').textContent=t.name;
+ else html=`${sym(t)} ${t.name||'세계여행'}`;
+ document.getElementById('mh').textContent=t.name||'세계여행';
  document.getElementById('mb').innerHTML=html;
  const a=document.getElementById('ma');a.innerHTML='';
  const q=document.createElement('button');q.textContent='닫기';q.onclick=()=>document.getElementById('modal').classList.remove('show');a.appendChild(q);
@@ -1261,9 +1268,23 @@ function modal(h,b){document.getElementById('mh').textContent=h;document.getElem
 function reset(){
  const ci=document.getElementById('chatInput');if(ci)ci.value='';P=PN.slice(0,gameCount).map((n,i)=>({name:n,money:Number(gameSettings.initialMoney)||2200000,pos:0,jail:0,dead:false,laps:0,items:[]}));data.forEach(t=>{t.owner=-1;t.bld=0;t.purchasedLap=-1});turn=0;rolled=false;dbl=false;over=false;document.getElementById('log').innerHTML='';status('주사위를 굴려 시작하세요.');log('게임 시작 — 40칸 월드 투어');ui()}
 
+
+function setRoomConnectionState(kind,title,detail=''){
+ const box=document.getElementById('roomOnlineStatus'),d=document.getElementById('roomOnlineDetail');
+ if(!box)return;
+ box.className='room-online-status '+kind;
+ const b=box.querySelector('b');if(b)b.textContent=title;
+ if(d)d.textContent=detail;
+}
+
 function screen(id){
  ['lobby','roomSetup','waitingRoom','joinRoom','publicLobby','friendLobby','spectateLobby','aiSetup','gameApp'].forEach(x=>document.getElementById(x).classList.add('hidden'));
  document.getElementById(id).classList.remove('hidden');
+ if(id!=='gameApp'||!spectating){
+   document.getElementById('gameApp')?.classList.remove('spectating');
+   const sb=document.getElementById('spectatorBadge');if(sb)sb.style.display='none';
+   const banner=document.getElementById('onlineTurnBanner');if(banner&&gameMode==='ai')banner.style.display='none';
+ }
 }
 function makeCode(){return Math.random().toString(36).slice(2,8).toUpperCase()}
 document.getElementById('openRoom').onclick=()=>screen('roomSetup');
@@ -1277,7 +1298,12 @@ document.getElementById('joinSubmit').onclick=()=>{
 };
 document.getElementById('joinCode').oninput=e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
 
-document.getElementById('openAI').onclick=()=>screen('aiSetup');
+document.getElementById('openAI').onclick=async()=>{
+ await stopSpectating(true);
+ gameMode='ai';latestOnlineRoom=null;onlineRoomCode=null;
+ document.getElementById('gameApp')?.classList.remove('spectating','friend-online');
+ screen('aiSetup');
+};
 document.getElementById('setupBack').onclick=()=>screen('lobby');
 document.getElementById('aiBack').onclick=()=>screen('lobby');
 document.getElementById('waitingBack').onclick=()=>screen('roomSetup');
@@ -1401,6 +1427,18 @@ const firebaseConfig={
 };
 firebase.initializeApp(firebaseConfig);
 const rtdb=firebase.database();
+
+try{
+ rtdb.ref('.info/connected').on('value',snap=>{
+   if(snap.val()===true){
+     if(onlineRoomCode)setRoomConnectionState('online','● 게임 온라인','Firebase 연결됨 · 방 '+onlineRoomCode);
+     else setRoomConnectionState('online','● 서버 온라인','Firebase 연결됨');
+   }else{
+     setRoomConnectionState('loading','서버 연결 중...','연결이 완료될 때까지 잠시 기다려주세요.');
+   }
+ });
+}catch(e){}
+
 let onlineRoomCode=null, onlinePlayerId=null, onlineRoomListener=null,lastPaymentSeen=0,lastSaleSeen=0,chatListener=null;
 
 function stableUid(){
@@ -1432,12 +1470,23 @@ async function goOnline(silent=false){
  let input=document.getElementById('friendNick');
  let nick=(input?.value.trim()||myNick()||('플레이어 '+onlinePlayerId.slice(-4))).slice(0,12);
  localStorage.setItem('wtNick',nick);if(input)input.value=nick;
- presenceRef=rtdb.ref('users/'+onlinePlayerId);
+ const friendUid=stableUid();
+ presenceRef=rtdb.ref('users/'+friendUid);
  await presenceRef.update({name:nick,online:true,lastSeen:firebase.database.ServerValue.TIMESTAMP});
  presenceRef.onDisconnect().update({online:false,lastSeen:firebase.database.ServerValue.TIMESTAMP});
- watchPresence();watchChallenges();watchFriendRequests();renderFriendList();
+ await migrateLegacyFriends();watchPresence();watchChallenges();watchFriendRequests();renderFriendList();
  if(!silent)statusFriend(`🟢 ${nick}으로 온라인`);
 }
+
+async function migrateLegacyFriends(){
+ try{
+  const uid=stableUid(),legacy=onlinePlayerId;
+  if(!legacy||legacy===uid)return;
+  const snap=await rtdb.ref(`friends/${legacy}`).once('value'),old=snap.val();
+  if(old)await rtdb.ref(`friends/${uid}`).update(old);
+ }catch(e){}
+}
+
 function statusFriend(msg){
  const box=document.getElementById('challengeBox');if(box&&!box.querySelector('.friend-row'))box.innerHTML=`<div class="lobby-note">${escapeHtml(msg)}</div>`;
 }
@@ -1446,14 +1495,14 @@ function watchPresence(){
  presenceListener=rtdb.ref('users').on('value',snap=>{presenceCache=snap.val()||{};renderFriendList()});
 }
 async function getFriendIds(){
- const snap=await rtdb.ref(`friends/${onlinePlayerId}`).once('value');
+ const snap=await rtdb.ref(`friends/${stableUid()}`).once('value');
  return Object.keys(snap.val()||{});
 }
 async function renderFriendList(){
  const list=document.getElementById('friendList');if(!list||!onlinePlayerId)return;
  list.innerHTML='<div class="lobby-note">불러오는 중...</div>';
  let ids=friendMode==='online'
-   ? Object.keys(presenceCache).filter(id=>id!==onlinePlayerId&&presenceCache[id]?.online)
+   ? Object.keys(presenceCache).filter(id=>id!==stableUid()&&presenceCache[id]?.online)
    : await getFriendIds();
  list.innerHTML='';
  ids.sort((a,b)=>(presenceCache[b]?.online?1:0)-(presenceCache[a]?.online?1:0));
@@ -1469,8 +1518,8 @@ async function renderFriendList(){
  if(!ids.length)list.innerHTML=`<div class="lobby-note">${friendMode==='friends'?'아직 추가한 친구가 없습니다. 접속자 탭에서 친구를 추가해보세요.':'현재 온라인인 다른 플레이어가 없습니다.'}</div>`;
 }
 async function addFriend(id,name){
- await rtdb.ref(`friendRequests/${id}/${onlinePlayerId}`).set({
-   from:onlinePlayerId,name:myNick()||onlineName(),at:firebase.database.ServerValue.TIMESTAMP
+ await rtdb.ref(`friendRequests/${id}/${stableUid()}`).set({
+   from:stableUid(),name:myNick()||onlineName(),at:firebase.database.ServerValue.TIMESTAMP
  });
  alert(`${name}님에게 친구 요청을 보냈습니다.`);
 }
@@ -1573,12 +1622,15 @@ async function joinOnlineRoom(code){
  watchOnlineRoom(code);watchChat(code);return room;
 }
 function watchOnlineRoom(code){
+ setRoomConnectionState('loading','방 연결 중...',`방 ${code} 정보를 불러오는 중입니다.`);
  if(onlineRoomListener&&onlineRoomCode)rtdb.ref('rooms/'+onlineRoomCode).off('value',onlineRoomListener);
  onlineRoomCode=code;
  onlineRoomListener=rtdb.ref('rooms/'+code).on('value',snap=>{
-   if(!snap.exists()){localStorage.removeItem('wtOnlineRoom');screen('lobby');return}
+   if(!snap.exists()){setRoomConnectionState('error','방 연결 끊김','방이 삭제되었거나 존재하지 않습니다.');localStorage.removeItem('wtOnlineRoom');screen('lobby');return}
    
 const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=room;
+   setRoomConnectionState('online','● 게임 온라인',`방 ${code} · 참가자 ${entries.length}/${Number(room.maxPlayers||2)}명 · 실시간 연결됨`);
+
    const isMember=!!room.players?.[onlinePlayerId]||!!room.playerSnapshot?.[onlinePlayerId];
    if(!isMember)return;
    if(room.status==='playing'&&room.game){
@@ -1828,6 +1880,9 @@ async function onlineEndTurn(){
 async function startOnlineGame(){
  if(!onlineRoomCode||startOnlineGame.busy)return;
  startOnlineGame.busy=true;
+ const startBtn=document.getElementById('startRoom');
+ if(startBtn){startBtn.disabled=true;startBtn.textContent='게임 시작 중...'}
+ setRoomConnectionState('loading','게임 시작 처리 중...','모든 참가자에게 게임 상태를 동기화하고 있습니다.');
  const ref=rtdb.ref('rooms/'+onlineRoomCode);
  try{
   const result=await ref.transaction(room=>{
@@ -1855,7 +1910,11 @@ async function startOnlineGame(){
    alert(room?.status==='playing'?'이미 게임이 시작되었습니다.':`게임 시작 실패: 참가자 ${n}/${m}`);
   }
  }catch(e){alert('게임 시작 오류: '+e.message)}
- finally{startOnlineGame.busy=false}
+ finally{
+   startOnlineGame.busy=false;
+   const b=document.getElementById('startRoom');
+   if(b&&latestOnlineRoom?.status!=='playing'){b.disabled=false;b.textContent='게임 시작'}
+ }
 }
 </script>
 
@@ -2006,39 +2065,56 @@ window.addEventListener('load',()=>{
 <script>
 async function loadSpectateGames(){
  const box=document.getElementById('spectateList');if(!box)return;
- box.innerHTML='<div class="lobby-note">진행 중인 게임을 불러오는 중...</div>';
+ box.innerHTML='<div class="lobby-note">진행 중인 게임을 확인하는 중...</div>';
  try{
-  const snap=await rtdb.ref('rooms').once('value'),rooms=snap.val()||{};
-  const live=Object.entries(rooms).filter(([code,r])=>r&&r.status==='playing'&&r.public===true&&r.game);
+  const snap=await rtdb.ref('rooms').once('value'),rooms=snap.val()||{},now=Date.now(),live=[];
+  for(const [code,r] of Object.entries(rooms)){
+   const players=orderedOnlinePlayers(r);
+   const valid=r&&r.status==='playing'&&r.public===true&&r.game&&Array.isArray(r.game.players)&&players.length>=2;
+   const stamp=Number(r.game?.updatedAt||r.startedAt||0);
+   const stale=stamp&&now-stamp>6*60*60*1000;
+   if(valid&&!stale)live.push([code,r]);
+   else if(r?.status==='playing'&&(!r.game||players.length<2||stale)){
+     // 오래된/깨진 관전 항목은 목록에서 제거
+     rtdb.ref(`rooms/${code}`).remove().catch(()=>{});
+   }
+  }
   box.innerHTML='';
   live.sort((a,b)=>(b[1].startedAt||0)-(a[1].startedAt||0)).forEach(([code,r])=>{
-    const players=orderedOnlinePlayers(r).map(x=>x[1]?.name||'플레이어').join(' vs ');
+    const names=orderedOnlinePlayers(r).map(x=>x[1]?.name||'플레이어').join(' vs ');
     const watchers=Object.keys(r.spectators||{}).length;
     const row=document.createElement('div');row.className='public-room';
-    row.innerHTML=`<div><b>🎮 ${escapeHtml(players)}</b><br><small>👁️ 관전자 ${watchers}명</small></div><button>관전</button>`;
+    row.innerHTML=`<div><b>🎮 ${escapeHtml(names)}</b><br><small>👁️ 관전자 ${watchers}명 · 진행 중</small></div><button>관전</button>`;
     row.querySelector('button').onclick=()=>startSpectating(code);
     box.appendChild(row);
   });
-  if(!live.length)box.innerHTML='<div class="lobby-note">현재 관전 가능한 공개 게임이 없습니다.</div>';
- }catch(e){box.innerHTML=`<div class="lobby-note">관전 목록 불러오기 실패: ${escapeHtml(e.message)}</div>`}
+  if(!live.length)box.innerHTML='<div class="lobby-note">현재 관전 가능한 게임이 없습니다.</div>';
+ }catch(e){box.innerHTML=`<div class="lobby-note">관전 목록을 불러오지 못했습니다.</div>`}
 }
 async function startSpectating(code){
- await stopSpectating();
+ await stopSpectating(true);
+ const roomSnap=await rtdb.ref(`rooms/${code}`).once('value'),room=roomSnap.val();
+ const players=room?orderedOnlinePlayers(room):[];
+ if(!room||room.status!=='playing'||room.public!==true||!room.game||!Array.isArray(room.game.players)||players.length<2){
+   await rtdb.ref(`rooms/${code}`).remove().catch(()=>{});
+   await loadSpectateGames();alert('이미 종료되었거나 존재하지 않는 게임입니다.');return;
+ }
  spectating=true;spectatorRoomCode=code;
  spectatorId='s_'+makePlayerId();
  const ref=rtdb.ref(`rooms/${code}/spectators/${spectatorId}`);
  await ref.set({name:myNick()||'관전자',joinedAt:firebase.database.ServerValue.TIMESTAMP});
  ref.onDisconnect().remove();
+ gameMode='spectator';latestOnlineRoom=room;
  screen('gameApp');document.getElementById('gameApp').classList.add('spectating');
  document.getElementById('spectatorBadge').style.display='';
  const roomRef=rtdb.ref(`rooms/${code}`);
  spectatorListener=roomRef.on('value',snap=>{
-   const room=snap.val();
-   if(!room||room.status!=='playing'||!room.game){stopSpectating();screen('lobby');return}
-   latestOnlineRoom=room;gameMode='friend';gameCount=orderedOnlinePlayers(room).length;
-   applyRemoteGame(room.game,room);
-   ['roll','buy','end','sellLand'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=true});
-   const count=Object.keys(room.spectators||{}).length;
+   const r=snap.val();
+   if(!r||r.status!=='playing'||!r.game){stopSpectating(true);screen('spectateLobby');loadSpectateGames();return}
+   latestOnlineRoom=r;gameMode='spectator';gameCount=orderedOnlinePlayers(r).length;
+   applyRemoteGame(r.game,r);
+   ['roll','buy','end','sellLand','autoPlay'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=true});
+   const count=Object.keys(r.spectators||{}).length;
    document.getElementById('spectatorBadge').textContent=`👁️ 관전자 ${count}명`;
    const banner=document.getElementById('onlineTurnBanner');
    if(banner){banner.style.display='';banner.textContent='👁️ 관전 중 — 게임 조작은 할 수 없습니다.'}
@@ -2046,15 +2122,15 @@ async function startSpectating(code){
  watchSpectatorChat(code);
 }
 function watchSpectatorChat(code){watchChat(code)}
-async function stopSpectating(){
- if(!spectating)return;
- try{
-  if(spectatorRoomCode&&spectatorId)await rtdb.ref(`rooms/${spectatorRoomCode}/spectators/${spectatorId}`).remove();
-  if(spectatorRoomCode&&spectatorListener)rtdb.ref(`rooms/${spectatorRoomCode}`).off('value',spectatorListener);
- }catch(e){}
- spectating=false;spectatorRoomCode=null;spectatorListener=null;
+async function stopSpectating(silent=false){
+ const code=spectatorRoomCode,id=spectatorId,listener=spectatorListener;
+ try{if(code&&listener)rtdb.ref(`rooms/${code}`).off('value',listener)}catch(e){}
+ try{if(code&&id)await rtdb.ref(`rooms/${code}/spectators/${id}`).remove()}catch(e){}
+ spectatorListener=null;spectatorRoomCode=null;spectatorId=null;spectating=false;
  document.getElementById('gameApp')?.classList.remove('spectating');
- const badge=document.getElementById('spectatorBadge');if(badge)badge.style.display='none';
+ const sb=document.getElementById('spectatorBadge');if(sb)sb.style.display='none';
+ if(chatListener?.query&&chatListener?.cb){try{chatListener.query.off('value',chatListener.cb)}catch(e){} chatListener=null}
+ for(const x of ['chatMessages']){const b=document.getElementById(x);if(b)b.innerHTML=''}
 }
 
 window.addEventListener('load',()=>{
