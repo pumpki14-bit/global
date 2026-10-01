@@ -425,6 +425,13 @@ body.friend-online #autoPlay,body.friend-online #gameSpeed{display:none!importan
 .spectator-badge{position:absolute;right:12px;top:58px;z-index:25;background:#0b1c29dd;border:1px solid #35566d;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800}
 .spectating .controls button,.spectating #sellLand,.spectating #autoPlay,.spectating #gameSpeed{pointer-events:none;opacity:.45}
 .friend-request{border-color:#47708a!important}
+
+/* v51 chat layout fix */
+.chatcard{overflow:hidden!important;min-height:300px!important}
+.chat-messages{min-height:0!important;height:220px!important;max-height:220px!important;overflow-y:auto!important;padding-bottom:8px!important}
+.chat-send{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:6px!important;flex:0 0 auto!important;position:relative!important;z-index:3!important;background:#0b1720!important;padding-top:7px!important}
+.chat-send input{min-width:0!important;width:100%!important;box-sizing:border-box!important}
+.chat-send button{white-space:nowrap!important}
 </style></head>
 <body>
 <div id="lobby" class="lobby-screen">
@@ -679,6 +686,7 @@ function dicePips(n){
  return (map[Math.max(1,Math.min(6,n))]||map[1]).map(p=>`<i class="pip ${p}"></i>`).join('');
 }
 function renderDice(a=1,b=1,cls=''){
+ window.currentDiceState={a,b,rolling:cls==='rolling'};
  const d=document.getElementById('dice');if(!d)return;
  d.innerHTML=`<span class="die3d ${cls}" aria-label="${a}">${dicePips(a)}</span><span class="die3d ${cls}" aria-label="${b}">${dicePips(b)}</span>`;
 }
@@ -691,7 +699,7 @@ async function roll(){
  if(gameMode==='friend')onlineRolling=true;
  rolled=true;ui();let a,b;
 if(p.jail){
- for(let k=0;k<7;k++){[a,b]=boostedDice();renderDice(a,b,'rolling');if(gameMode==='friend')await pushOnlineGame();await wait(60)}
+ for(let k=0;k<10;k++){[a,b]=boostedDice();renderDice(a,b,'rolling');if(gameMode==='friend')await pushOnlineGame({diceFrame:k});await wait(85)}
  if(a===b){
    p.jail=0;dbl=false;status('더블! 무인도 탈출');log(p.name+' 더블로 무인도 탈출');
  }else{
@@ -706,7 +714,7 @@ if(p.jail){
    status('3턴 경과로 무인도 탈출');log(p.name+' 무인도 자동 탈출');
  }
 }
-for(let k=0;k<7;k++){[a,b]=boostedDice();renderDice(a,b,'rolling');if(gameMode==='friend')await pushOnlineGame();await wait(60)}renderDice(a,b,'land');await wait(220);dbl=a===b;for(let k=0;k<a+b;k++){p.pos=(p.pos+1)%40;if(p.pos===0){p.money+=200000;p.laps++;log(p.name+' 출발 통과 +20만원 · '+p.laps+'바퀴')}draw();if(gameMode==='friend')await pushOnlineGame();await wait(80)}await land();ui();
+for(let k=0;k<10;k++){[a,b]=boostedDice();renderDice(a,b,'rolling');if(gameMode==='friend')await pushOnlineGame({diceFrame:k});await wait(85)}renderDice(a,b,'land');if(gameMode==='friend')await pushOnlineGame({diceLanded:true});await wait(300);dbl=a===b;for(let k=0;k<a+b;k++){p.pos=(p.pos+1)%40;if(p.pos===0){p.money+=200000;p.laps++;log(p.name+' 출발 통과 +20만원 · '+p.laps+'바퀴')}draw();if(gameMode==='friend')await pushOnlineGame();await wait(80)}await land();ui();
 if(gameMode==='friend'){
  await pushOnlineGame();
  onlineRolling=false;
@@ -1430,6 +1438,10 @@ function watchOnlineRoom(code){
    if(!snap.exists()){screen('lobby');return}
    
 const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=room;
+   if(!onlineRolling&&room.game?.diceState){
+     const ds=room.game.diceState;
+     renderDice(Number(ds.a)||1,Number(ds.b)||1,ds.rolling?'rolling':'land');
+   }
    const sb=document.getElementById('spectatorBadge');
    if(sb){const sc=Object.keys(room.spectators||{}).length;sb.style.display='';sb.textContent=`👁️ 관전자 ${sc}명`;}
    if(room.game?.lastPayment?.at>lastPaymentSeen){
@@ -1516,7 +1528,7 @@ function packOnlineGame(extra={}){
   players:P.map(p=>({name:p.name,money:p.money,pos:p.pos,jail:p.jail,dead:!!p.dead,laps:p.laps||0})),
   lands:data.map(t=>({owner:t.owner,bld:t.bld,purchasedLap:t.purchasedLap})),
   turn,rolled:!!rolled,dbl:!!dbl,over:!!over,
-  dice:document.getElementById('dice').textContent,
+  diceState:window.currentDiceState||{a:1,b:1,rolling:false},
   message:document.getElementById('status').textContent,
   settings:gameSettings,
   updatedAt:firebase.database.ServerValue.TIMESTAMP,...extra
@@ -1527,6 +1539,11 @@ async function pushOnlineGame(extra={}){
  await rtdb.ref(`rooms/${onlineRoomCode}/game`).set(packOnlineGame(extra));
 }
 function applyRemoteGame(g,room){
+ if(g?.diceState){
+   const ds=g.diceState;
+   renderDice(Number(ds.a)||1,Number(ds.b)||1,ds.rolling?'rolling':'land');
+ }
+
  if(Array.isArray(g?.players)){
   gameCount=g.players.length;
   while(P.length<gameCount)P.push({name:'플레이어',money:Number(gameSettings.initialMoney)||2200000,pos:0,jail:0,dead:false,laps:0});
@@ -1578,11 +1595,13 @@ async function resetChat(){
    try{await rtdb.ref(`rooms/${onlineRoomCode}/chat`).remove()}catch(e){}
  }
 }
+let chatSending=false;
 async function sendChat(){
  if(spectating){alert('관전 중에는 채팅을 보낼 수 없습니다.');return}
  const input=document.getElementById('chatInput');
  const msg=(input?.value||'').trim();
- if(!msg)return;
+ if(!msg||chatSending)return;
+ chatSending=true;
  if(!onlineRoomCode){alert('친구 대전 방에 들어간 뒤 채팅할 수 있습니다.');return}
  try{
    let name=myNick()||onlineName();
@@ -1596,6 +1615,7 @@ async function sendChat(){
    });
    input.value='';
  }catch(err){alert('채팅 전송 실패: '+err.message)}
+ finally{chatSending=false}
 }
 
 function orderedOnlinePlayers(room){
@@ -1785,10 +1805,7 @@ window.addEventListener('load',()=>{
 window.addEventListener('load',()=>{
  const eb=document.getElementById('end');
  if(eb)eb.onclick=end;
- const send=document.getElementById('chatSend');
- if(send)send.onclick=sendChat;
- const input=document.getElementById('chatInput');
- if(input)input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();sendChat()}});
+ 
 });
 </script>
 
@@ -1874,5 +1891,13 @@ window.addEventListener('load',()=>{
  const b=document.getElementById('spectateBack');if(b)b.onclick=()=>screen('lobby');
  const r=document.getElementById('refreshSpectate');if(r)r.onclick=loadSpectateGames;
 });
+</script>
+<script>
+function bindChatOnce(){
+ const send=document.getElementById('chatSend'),input=document.getElementById('chatInput');
+ if(send)send.onclick=()=>sendChat();
+ if(input)input.onkeydown=e=>{if(e.key==='Enter'&&!e.repeat){e.preventDefault();sendChat()}};
+}
+window.addEventListener('load',bindChatOnce,{once:true});
 </script>
 </body></html>
