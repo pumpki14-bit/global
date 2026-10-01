@@ -768,8 +768,9 @@ function ui(){
  document.getElementById('roll').disabled=!h||rolled||actionLocked||p.dead||p.money<=0;
  document.getElementById('buy').disabled=!(h&&rolled&&!actionLocked&&!p.dead&&p.money>0&&(t.type==='CITY'||t.type==='SPECIAL')&&t.owner<0&&p.money>=t.price);
  document.getElementById('end').disabled=!(h&&rolled&&!actionLocked&&!rollLock&&!p.dead&&p.money>0);
- document.getElementById('sellLand').disabled=!(h&&!actionLocked&&!p.dead&&p.money>0&&data.some(x=>x.owner===localIdx));
- const ap=document.getElementById('autoPlay');if(ap)ap.style.display=gameSettings.allowAuto?'':'none';
+ const li=document.getElementById('landInfo');if(li)li.disabled=!p;
+ document.getElementById('sellLand').disabled=!(turn===localIdx&&!p.dead&&data.some(x=>x.owner===localIdx));
+ const ap=document.getElementById('autoPlay');if(ap){ap.style.display=(gameMode==='ai'&&gameSettings.allowAuto)?'':'none';ap.disabled=over;}
  const gs=document.getElementById('gameSpeed');if(gs){gs.style.display=gameSettings.allowSpeed?'':'none';if(!gameSettings.allowSpeed){gameSpeed=1;gs.value='1'}}
 
  players();draw();
@@ -1135,7 +1136,7 @@ function bankrupt(i){
 }
 function showSellModal(required=false){
  const me=(gameMode==='friend')?onlinePlayerIndexFromCurrent():0;
- if(!required && ((gameMode==='friend'&&turn!==me)||(gameMode==='ai'&&turn!==0)||autoPlay||over)){status('땅 매각은 내 턴에만 할 수 있습니다.');return}
+ if(!required && ((gameMode==='friend'&&turn!==me)||(gameMode==='ai'&&turn!==0)||over)){status('땅 매각은 내 턴에만 할 수 있습니다.');return}
  const owned=data.filter(t=>t.owner===me);
  document.getElementById('mh').textContent=required?'💸 현금 부족 · 땅 매각':'땅 매각';
  document.getElementById('mb').innerHTML=owned.length
@@ -1199,6 +1200,7 @@ function end(){
  do turn=(turn+1)%gameCount;while(P[turn]?.dead);
  rolled=false;dbl=false;rollLock=false;status('주사위를 굴리세요.');ui();
  if(gameMode==='ai'&&turn&&!over)setTimeout(()=>ai(),Math.max(100,450/gameSpeed));
+ if(gameMode==='ai'&&autoPlay&&!over)setTimeout(autoPlayTick,180);
 }
 
 async function ai(){
@@ -1349,7 +1351,10 @@ document.querySelectorAll('.ai-count').forEach(b=>b.onclick=()=>{
   keyBoost:Number(document.getElementById('aiKey')?.value)||1,
   isPublic:false
  };
- gameMode='ai';gameCount=+b.dataset.count;autoPlay=false;gameSpeed=2;screen('gameApp');reset();const sh=shuffleArray(P.slice(0,gameCount));P.splice(0,gameCount,...sh);turn=0;ui();updateAutoControls();
+ gameMode='ai';gameCount=+b.dataset.count;autoPlay=false;gameSpeed=2;screen('gameApp');reset();
+ // 사람은 항상 0번 인덱스. 시작 차례만 랜덤으로 정한다.
+ turn=Math.floor(Math.random()*gameCount);status('주사위를 굴리세요.');ui();updateAutoControls();
+ if(turn!==0)setTimeout(()=>ai(),350);
 });
 
 
@@ -1417,11 +1422,28 @@ function updateAutoControls(){
 }
 document.getElementById('gameSpeed').onchange=e=>{gameSpeed=+e.target.value;};
 document.getElementById('autoPlay').onclick=()=>{
- if(gameMode!=='ai')return;
+ if(gameMode!=='ai'||over)return;
  autoPlay=!autoPlay;updateAutoControls();ui();
- if(autoPlay&&turn===0&&!rolled&&!over)setTimeout(roll,80);
+ if(autoPlay)setTimeout(autoPlayTick,100);
 };
+function autoPlayTick(){
+ if(gameMode!=='ai'||!autoPlay||over)return;
+ if(actionLocked||rollLock){setTimeout(autoPlayTick,160);return}
+ if(turn===0){
+   if(!rolled){roll().then(()=>setTimeout(autoPlayTick,140));return}
+   end();setTimeout(autoPlayTick,140);return;
+ }
+ // AI 차례는 기존 AI 루틴에 맡긴다.
+ if(!rolled)ai();
+ setTimeout(autoPlayTick,220);
+}
 
+document.getElementById('landInfo').onclick=()=>{
+ const p=P[turn],t=data[p?.pos];
+ if(!t)return;
+ showTileInfo(t);
+};
+document.getElementById('sellLand').onclick=()=>showSellModal(false);
 document.getElementById('roll').onclick=roll;document.getElementById('buy').onclick=buy;document.getElementById('end').onclick=end;</script>
 <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-database-compat.js"></script>
