@@ -457,7 +457,27 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
 .room-online-status.online .online-dot{background:#48d58b;box-shadow:0 0 10px #48d58b}.room-online-status.error .online-dot{background:#ef6674;box-shadow:0 0 10px #ef6674}
 .room-online-status.loading .online-dot{animation:onlinePulse .8s infinite alternate}@keyframes onlinePulse{to{opacity:.3}}
 .room-slot-online{font-size:10px;color:#62dda0;font-weight:900;margin-left:5px}
-.game-notice-wrap{width:min(72%,300px)!important;top:39%!important;gap:4px!important}.game-notice{font-size:11px!important;padding:6px 9px!important;border-radius:8px!important;box-shadow:0 5px 15px #0006!important}.tile.roll-destination{outline:3px solid #4be28a!important;outline-offset:-3px!important;box-shadow:inset 0 0 0 1px #baffd2,0 0 12px #4be28a99!important;filter:brightness(1.18)}.sell-money-now{padding:8px 10px;margin-bottom:9px;border:1px solid #456178;border-radius:8px;background:#0c1a26;font-size:13px}</style></head>
+.game-notice-wrap{position:fixed!important;left:50%!important;top:8px!important;transform:translateX(-50%)!important;width:min(88vw,420px)!important;gap:3px!important;z-index:9999!important}.game-notice{font-size:10px!important;padding:5px 8px!important;border-radius:7px!important;box-shadow:0 3px 10px #0005!important}.tile.roll-destination{outline:3px solid #4be28a!important;outline-offset:-3px!important;box-shadow:inset 0 0 0 1px #baffd2,0 0 12px #4be28a99!important;filter:brightness(1.18)}.sell-money-now{padding:8px 10px;margin-bottom:9px;border:1px solid #456178;border-radius:8px;background:#0c1a26;font-size:13px}
+.land-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;max-height:52vh;overflow:auto;padding:2px}
+.land-mini{position:relative;text-align:left;min-height:58px;padding:9px 8px 7px 11px;border-radius:8px;background:#132536;border:1px solid #365066;overflow:hidden}
+.land-mini:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--land)}
+.land-name{display:block;font-size:12px;font-weight:900}.land-right{display:block;font-size:10px;color:#d9e7f1;margin-top:3px}.land-owner{display:block;font-size:9px;color:var(--owner);margin-top:2px}
+.land-hint{font-size:10px;color:#8297a7;margin-top:8px;text-align:center}
+.property-detail{text-align:left}.pd-head,.pd-row{display:flex;justify-content:space-between;gap:12px;align-items:center}.pd-head strong{font-size:18px}.pd-owner,.pd-special{font-size:11px;color:#93a9b9;margin:7px 0}
+.pd-table{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:1px;background:#30485a;border:1px solid #30485a;border-radius:7px;overflow:hidden;margin-top:9px}.pd-table>*{background:#10202e;padding:6px 5px;font-size:10px}.pd-th{font-weight:900;background:#182f40!important}
+@media(max-width:700px){.land-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.result-board{display:flex;flex-direction:column;gap:7px;max-height:58vh;overflow:auto}
+.result-row{display:grid;grid-template-columns:42px 1fr;gap:5px 9px;padding:9px;border:1px solid #38546a;border-radius:9px;background:#10202e;text-align:left}
+.result-row.winner{border-width:2px}.result-rank{font-weight:900;font-size:13px}.result-name{font-weight:900}.result-stats{grid-column:1/3;display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px;color:#9fb2c1}.result-stats b{color:#eef6ff}
+
+.turn-limit-badge{display:inline-flex;align-items:center;padding:7px 10px;border:1px solid #42627a;border-radius:8px;background:#102538;font-size:11px;font-weight:900}
+.ready-actions{display:grid;grid-template-columns:1fr 1.6fr;gap:7px}.ready-actions #readyRoom.ready{background:#168c58;border-color:#4ee09a}.ready-actions #startRoom{margin:0}
+.asset-mini{padding:6px 0;border-bottom:1px solid #20384a;font-size:10px}.asset-mini:last-child{border-bottom:0}.asset-mini .asset-top{display:flex;justify-content:space-between;font-weight:900}.asset-mini .asset-sub{color:#91a7b8;margin-top:3px}
+.key-reveal{position:fixed;inset:0;z-index:10020;display:flex;align-items:center;justify-content:center;background:#0008;pointer-events:none}.key-card-big{width:min(310px,82vw);padding:24px 18px;border-radius:18px;background:linear-gradient(145deg,#d8a62f,#fff0a4 45%,#b77d16);color:#201500;border:3px solid #fff4b8;box-shadow:0 20px 60px #000a;text-align:center;animation:keyFlip .62s ease both}.key-card-big .key-icon{font-size:50px}.key-card-big b{display:block;font-size:20px;margin:8px 0}.key-card-big small{font-size:12px;font-weight:800}@keyframes keyFlip{0%{transform:perspective(700px) rotateY(90deg) scale(.75);opacity:0}65%{transform:perspective(700px) rotateY(-8deg) scale(1.04)}100%{transform:none;opacity:1}}
+.countdown-overlay{position:fixed;inset:0;z-index:10030;background:#000b;display:flex;align-items:center;justify-content:center;font-size:min(22vw,150px);font-weight:1000;text-shadow:0 8px 30px #000;animation:countPop .7s ease both}@keyframes countPop{0%{transform:scale(.45);opacity:0}35%{transform:scale(1.12);opacity:1}100%{transform:scale(1);opacity:.92}}
+.history-row{padding:7px;border-bottom:1px solid #263c4e;text-align:left;font-size:11px}.history-row b{display:block}
+</style></head>
 <body>
 <div id="lobby" class="lobby-screen">
   <div class="lobby-shell">
@@ -465,7 +485,7 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
     <div class="lobby-card">
       <button class="lobby-main" id="openRoom">👥 방 만들기 <span>2 · 3 · 4인</span></button>
       <button class="lobby-main join" id="openJoin">🔗 방 참가 <span>코드 입력</span></button><button class="lobby-main" id="openPublic">🌐 공개방 <span>코드 없이 참가</span></button>
-      <button class="lobby-main" id="openFriends">🧑‍🤝‍🧑 친구 <span>친구 목록 · 온라인 상태 · 대전</span></button><button class="lobby-main" id="openSpectate">👁️ 관전 <span>진행 중인 공개 게임 보기</span></button><button class="lobby-main ai" id="openAI">🤖 AI 대전 <span>바로 시작</span></button>
+      <button class="lobby-main" id="openFriends">🧑‍🤝‍🧑 친구 <span>친구 목록 · 온라인 상태 · 대전</span></button><button class="lobby-main" id="openSpectate">👁️ 관전 <span>진행 중인 공개 게임 보기</span></button><button class="lobby-main" id="openHistory">🕘 최근 게임 <span>최근 10판 기록</span></button><button class="lobby-main ai" id="openAI">🤖 AI 대전 <span>바로 시작</span></button>
     </div>
     <div class="lobby-note">친구 대전은 인원 선택 후 대기방으로 이동합니다.</div>
   </div>
@@ -485,7 +505,7 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
       <label>자동플레이 <select id="setAuto"><option value="true">허용</option><option value="false">사용 불가</option></select></label>
       <label>배속 <select id="setSpeed"><option value="true">허용</option><option value="false">1배속 고정</option></select></label>
       <label>더블 확률 <select id="setDouble"><option value="1">기본</option><option value="1.5">높음</option><option value="2">매우 높음</option></select></label>
-      <label>황금열쇠 확률 <select id="setKey"><option value="1">기본</option><option value="1.5">높음</option><option value="2">매우 높음</option></select></label>
+      <label>황금열쇠 확률 <select id="setKey"><option value="1">기본</option><option value="1.5">높음</option><option value="2">매우 높음</option></select></label><label>턴 제한 <select id="setTurnLimit"><option value="0">제한 없음</option><option value="30">30턴</option><option value="50" selected>50턴</option><option value="100">100턴</option></select></label>
     </div>
   </div>
 </div>
@@ -496,7 +516,7 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
     <div id="roomOnlineStatus" class="room-online-status loading"><span class="online-dot"></span><b>서버 연결 확인 중...</b><small id="roomOnlineDetail">방 정보를 불러오는 중입니다.</small></div>
     <div class="room-code-box"><span>방 코드</span><b id="roomCode">------</b><button id="copyCode">코드 복사</button></div>
     <div id="roomSlots" class="room-slots"></div>
-    <button class="start-room" id="startRoom">친구를 기다리는 중...</button>
+    <div class="ready-actions"><button id="readyRoom">준비</button><button class="start-room" id="startRoom">친구를 기다리는 중...</button></div>
     <div class="waiting-chat card">
       <h3>방 채팅</h3>
       <div id="waitChatMessages" class="chat-messages"></div>
@@ -559,14 +579,14 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
       <label>자동플레이 <select id="aiAuto"><option value="true">허용</option><option value="false">사용 불가</option></select></label>
       <label>배속 <select id="aiSpeedAllow"><option value="true">허용</option><option value="false">1배속 고정</option></select></label>
       <label>더블 확률 <select id="aiDouble"><option value="1">기본</option><option value="1.5">높음</option><option value="2">매우 높음</option></select></label>
-      <label>황금열쇠 확률 <select id="aiKey"><option value="1">기본</option><option value="1.5">높음</option><option value="2">매우 높음</option></select></label>
+      <label>황금열쇠 확률 <select id="aiKey"><option value="1">기본</option><option value="1.5">높음</option><option value="2">매우 높음</option></select></label><label>턴 제한 <select id="aiTurnLimit"><option value="0">제한 없음</option><option value="30">30턴</option><option value="50" selected>50턴</option><option value="100">100턴</option></select></label>
     </div>
   </div>
 </div>
-<div id="gameApp" class="hidden"><div class="wrap"><div class="top"><div><b>🌍 WORLD TOUR</b><div style="font-size:11px;color:#91a8ba">세계 도시를 사고 건설하는 40칸 보드게임</div></div><div class="top-actions"><button id="keyInfo" class="key-info-btn">🔑 황금열쇠</button><button id="exitGame" class="exit-game">게임 나가기</button></div></div><div class="game"><div class="board" id="board"><div class="center"><div style="font-size:11px;color:#78bfe8;font-weight:900;letter-spacing:2px;margin-bottom:6px">WORLD TOUR</div><div class="turn" id="turn"></div><div class="dice" id="dice">⚀ ⚀</div><div class="status" id="status"></div><div class="actions"><button class="primary" id="roll">🎲 굴리기</button><button id="buy" style="display:none">증서 구매</button><button id="end">턴 종료</button><button id="landInfo">땅 정보</button><button id="sellLand">땅 매각</button><button id="autoPlay" class="auto-btn">▶ 자동플레이</button>
+<div id="gameApp" class="hidden"><div class="wrap"><div class="top"><div><b>🌍 WORLD TOUR</b><div style="font-size:11px;color:#91a8ba">세계 도시를 사고 건설하는 40칸 보드게임</div></div><div class="top-actions"><span id="turnLimitBadge" class="turn-limit-badge">남은 턴 50</span><button id="keyInfo" class="key-info-btn">🔑 황금열쇠</button><button id="exitGame" class="exit-game">게임 나가기</button></div></div><div class="game"><div class="board" id="board"><div class="center"><div style="font-size:11px;color:#78bfe8;font-weight:900;letter-spacing:2px;margin-bottom:6px">WORLD TOUR</div><div class="turn" id="turn"></div><div class="dice" id="dice">⚀ ⚀</div><div class="status" id="status"></div><div class="actions"><button class="primary" id="roll">🎲 굴리기</button><button id="buy" style="display:none">증서 구매</button><button id="end">턴 종료</button><button id="landInfo">땅 정보</button><button id="sellLand">땅 매각</button><button id="autoPlay" class="auto-btn">▶ 자동플레이</button>
 <select id="gameSpeed" class="speed-select" aria-label="게임 속도">
 <option value="1">1배속</option><option value="2">2배속</option><option value="3">3배속</option><option value="4">4배속</option><option value="10">10배속</option>
-</select></div></div></div><div class="side"><div class="card"><h3>플레이어</h3><div id="players"></div></div><div class="card"><h3>증서 정보</h3><div id="info" style="font-size:11px;color:#a9bac7">도시를 눌러 확인</div></div><div class="card inventory-card"><h3>내 황금열쇠 아이템</h3><div id="myItems" class="item-list"><span class="muted">보유 아이템 없음</span></div></div>
+</select></div></div></div><div class="side"><div class="card"><h3>플레이어</h3><div id="players"></div></div><div class="card"><h3>📊 자산 현황</h3><div id="assetSummary"></div></div><div class="card"><h3>증서 정보</h3><div id="info" style="font-size:11px;color:#a9bac7">도시를 눌러 확인</div></div><div class="card inventory-card"><h3>내 황금열쇠 아이템</h3><div id="myItems" class="item-list"><span class="muted">보유 아이템 없음</span></div></div>
 <div class="card chatcard"><h3>채팅</h3><div id="chatMessages" class="chat-messages"></div><div class="chat-send"><input id="chatInput" maxlength="80" placeholder="메시지"><button id="chatSend">전송</button></div></div>
 <div id="log" style="display:none"></div></div></div></div></div><div class="modal" id="modal"><div class="box"><h2 id="mh"></h2><p id="mb"></p><div class="actions" id="ma"></div></div></div>
 <script>
@@ -640,8 +660,8 @@ let data=[];function mk(){
  }
 })();
 
-let P=[],turn=0,rolled=false,dbl=false,over=false,gameCount=4,gameMode='ai',autoPlay=false,gameSpeed=2;
-let gameSettings={initialMoney:2200000,allowAuto:true,allowSpeed:true,doubleBoost:1,keyBoost:1,isPublic:false};
+let P=[],turn=0,rolled=false,dbl=false,over=false,gameCount=4,gameMode='ai',autoPlay=false,gameSpeed=2;let turnLimit=50,turnsLeft=50;
+let gameSettings={initialMoney:2200000,allowAuto:true,allowSpeed:true,doubleBoost:1,keyBoost:1,turnLimit:50,isPublic:false};
 function normalizeBoardData(){
  data.forEach((t,i)=>{
   if(!t)return;
@@ -709,14 +729,71 @@ function inspect(t){
  }else document.getElementById('info').innerHTML=`<b>${sym(t)} ${t.name}</b>`;
 }
 
+
+function showLandInfo(){
+ const cities=data.filter(t=>t.type==='CITY'||t.type==='SPECIAL');
+ const cards=cities.map(t=>{
+   const owner=t.owner<0?'은행':(P[t.owner]?.name||'플레이어');
+   const ownerColor=t.owner<0?'#80909d':PC[t.owner];
+   const right=t.owner<0?won(t.price):owner;
+   return `<button type="button" class="land-mini land-info-card" data-land="${t.i}" style="--land:${GN[t.group]};--owner:${ownerColor}">
+     <span class="land-name">${t.name}</span>
+     <span class="land-right">${right}</span>
+     <span class="land-owner">${t.owner<0?'미구매':'● '+owner}</span>
+   </button>`;
+ }).join('');
+ document.getElementById('mh').textContent='📋 전체 땅 정보';
+ document.getElementById('mb').innerHTML=`<div class="land-grid">${cards}</div><div class="land-hint">땅을 누르면 건설비와 통행료를 한눈에 확인할 수 있습니다.</div>`;
+ const a=document.getElementById('ma');a.innerHTML='';
+ const q=document.createElement('button');q.textContent='닫기';q.onclick=()=>document.getElementById('modal').classList.remove('show');a.appendChild(q);
+ document.getElementById('modal').classList.add('show');
+
+ document.querySelectorAll('.land-info-card').forEach(btn=>btn.onclick=()=>{
+   const t=data[+btn.dataset.land];
+   if(!t)return;
+   const owner=t.owner<0?'은행':(P[t.owner]?.name||'플레이어');
+   const building=t.type==='SPECIAL'?'건설 불가':['대지','별장 1채','별장 2채','빌딩','호텔'][t.bld];
+   document.getElementById('mh').textContent=t.name;
+   if(t.type==='SPECIAL'){
+     document.getElementById('mb').innerHTML=`<div class="property-detail">
+       <div class="pd-head"><b>매입가</b><strong>${won(t.price)}</strong></div>
+       <div class="pd-owner">소유자: ${owner}</div>
+       <div class="pd-special">건설 불가</div>
+       <div class="pd-row"><span>통행료</span><b>${won(t.rents?.[0]||0)}</b></div>
+     </div>`;
+   }else{
+     document.getElementById('mb').innerHTML=`<div class="property-detail">
+       <div class="pd-head"><b>매입가</b><strong>${won(t.price)}</strong></div>
+       <div class="pd-owner">소유자: ${owner} · 현재 ${building}</div>
+       <div class="pd-table">
+         <div class="pd-th">단계</div><div class="pd-th">건설비</div><div class="pd-th">통행료</div>
+         <div>대지</div><div>—</div><b>${won(t.rents[0])}</b>
+         <div>별장 1채</div><div>${won(t.buildCosts[1])}</div><b>${won(t.rents[1])}</b>
+         <div>별장 2채</div><div>${won(t.buildCosts[2])}</div><b>${won(t.rents[2])}</b>
+         <div>빌딩</div><div>${won(t.buildCosts[3])}</div><b>${won(t.rents[3])}</b>
+         <div>호텔</div><div>${won(t.buildCosts[4])}</div><b>${won(t.rents[4])}</b>
+       </div>
+     </div>`;
+   }
+   const ma=document.getElementById('ma');ma.innerHTML='';
+   const back=document.createElement('button');back.textContent='← 전체 땅 보기';back.onclick=showLandInfo;
+   const close=document.createElement('button');close.textContent='닫기';close.onclick=()=>document.getElementById('modal').classList.remove('show');
+   ma.append(back,close);
+ });
+}
+
 function showTileInfo(t){
  if(!t)return;
  inspect(t);
+ document.getElementById('mh').textContent='땅 정보';
  let html='';
- if(t.type==='CITY')html=`매입가 <b>${won(t.price)}</b><br>소유: <b>${t.owner<0?'은행':P[t.owner].name}</b><br>건물: ${['대지','별장 1채','별장 2채','빌딩','호텔'][t.bld]}<br>현재 통행료 <b>${won(rent(t))}</b>`;
- else if(t.type==='SPECIAL')html=`매입가 <b>${won(t.price)}</b><br>소유: <b>${t.owner<0?'은행':P[t.owner].name}</b><br>건설 불가<br>통행료 <b>${won(rent(t))}</b>`;
- else html=`${sym(t)} ${t.name||'세계여행'}`;
- document.getElementById('mh').textContent=t.name||'세계여행';
+ if(t.type==='CITY'){
+   html=`<div style="text-align:left"><b>${t.name}</b><br>매입가 ${won(t.price)}<br>소유자 ${t.owner<0?'은행':P[t.owner]?.name||'플레이어'}<br>건물 ${['대지','별장 1채','별장 2채','빌딩','호텔'][t.bld]||'대지'}<br>현재 통행료 <b>${won(rent(t))}</b></div>`;
+ }else if(t.type==='SPECIAL'){
+   html=`<div style="text-align:left"><b>${t.name}</b><br>매입가 ${won(t.price)}<br>소유자 ${t.owner<0?'은행':P[t.owner]?.name||'플레이어'}<br>건설 불가<br>통행료 <b>${won(rent(t))}</b></div>`;
+ }else{
+   html=`<div style="text-align:left"><b>${t.name||({KEY:'황금열쇠',ISLAND:'무인도',WORLD:'세계여행',TRAVEL:'세계여행',START:'출발'}[t.type]||'일반 칸')}</b><br><span style="font-size:11px;color:#91a8b8">구매할 수 없는 칸입니다.</span></div>`;
+ }
  document.getElementById('mb').innerHTML=html;
  const a=document.getElementById('ma');a.innerHTML='';
  const q=document.createElement('button');q.textContent='닫기';q.onclick=()=>document.getElementById('modal').classList.remove('show');a.appendChild(q);
@@ -751,10 +828,56 @@ async function useOwnedItem(idx){
 function hasTollPass(p){return Array.isArray(p?.items)&&p.items.includes('TOLL_PASS')}
 function consumeTollPass(p){const i=p?.items?.indexOf('TOLL_PASS')??-1;if(i>=0){p.items.splice(i,1);return true}return false}
 
-function players(){renderMyItems();document.getElementById('players').innerHTML=P.map((p,i)=>`<div class="pl ${p.dead?'dead':''}" style="--c:${PC[i]}"><div class="row"><b>${i===turn?'▶ ':''}${p.name}</b><b>${won(p.money)}</b></div><div class="row"><span>증서 ${data.filter(t=>t.owner===i).length}</span><span>${p.jail?'🏝️ '+p.jail+'턴':''}</span></div></div>`).join('')}
+
+function ensureStats(p){if(!p.stats)p.stats={tollIncome:0,tollPaid:0,purchase:0,build:0,keys:0};return p.stats}
+function assetTotal(i){return Math.max(0,P[i]?.money||0)+propertyValueFor(i)}
+function renderAssetSummary(){
+ const box=document.getElementById('assetSummary');if(!box)return;
+ box.innerHTML=P.slice(0,gameCount).map((p,i)=>`<div class="asset-mini"><div class="asset-top"><span>${PI[i]||'●'} ${escapeHtml(p.name)}</span><b>${won(assetTotal(i))}</b></div><div class="asset-sub">🏠 ${data.filter(t=>t.owner===i).length}개 · 🏢 ${data.filter(t=>t.owner===i&&t.bld===3).length} · 🏨 ${data.filter(t=>t.owner===i&&t.bld===4).length}</div></div>`).join('');
+}
+function updateTurnBadge(){
+ const b=document.getElementById('turnLimitBadge');if(!b)return;
+ b.textContent=turnLimit>0?`남은 턴 ${Math.max(0,turnsLeft)} / ${turnLimit}`:'턴 제한 없음';
+ b.style.display='inline-flex';
+}
+function consumeTurn(){
+ if(over||turnLimit<=0)return false;
+ turnsLeft=Math.max(0,turnsLeft-1);updateTurnBadge();
+ if(turnsLeft===0){
+   over=true;status('턴 제한 종료 · 총자산으로 순위를 계산합니다.');
+   gameNotice('⏱️ 턴 종료! 총자산 순위를 계산합니다.',2200);
+   ui();return true;
+ }
+ return false;
+}
+function showKeyReveal(playerName,card){
+ document.querySelector('.key-reveal')?.remove();
+ const o=document.createElement('div');o.className='key-reveal';
+ o.innerHTML=`<div class="key-card-big"><div class="key-icon">🔑</div><b>황금열쇠</b><small>${escapeHtml(playerName)} · ${escapeHtml(card)}</small></div>`;
+ document.body.appendChild(o);setTimeout(()=>o.remove(),1900);
+}
+function recordGameHistory(){
+ try{
+   const rows=P.slice(0,gameCount).map((p,i)=>({name:p.name,total:assetTotal(i)})).sort((a,b)=>b.total-a.total);
+   const h=JSON.parse(localStorage.getItem('wtGameHistory')||'[]');
+   h.unshift({at:Date.now(),mode:gameMode,turnLimit,rows});
+   localStorage.setItem('wtGameHistory',JSON.stringify(h.slice(0,10)));
+ }catch(e){}
+}
+function showHistory(){
+ let h=[];try{h=JSON.parse(localStorage.getItem('wtGameHistory')||'[]')}catch(e){}
+ document.getElementById('mh').textContent='🕘 최근 게임 기록';
+ document.getElementById('mb').innerHTML=h.length?h.map((g,i)=>`<div class="history-row"><b>${new Date(g.at).toLocaleString('ko-KR')} · ${g.mode==='friend'?'온라인':'AI'}</b>${g.rows.map((r,n)=>`${n+1}위 ${escapeHtml(r.name)} ${won(r.total)}`).join(' · ')}</div>`).join(''):'아직 저장된 게임이 없습니다.';
+ const a=document.getElementById('ma');a.innerHTML='';const q=document.createElement('button');q.textContent='닫기';q.onclick=()=>document.getElementById('modal').classList.remove('show');a.appendChild(q);document.getElementById('modal').classList.add('show');
+}
+function transferBankruptAssets(from,to=-1){
+ data.filter(t=>t.owner===from).forEach(t=>{t.owner=(to>=0&&!P[to]?.dead)?to:-1;if(t.owner<0){t.bld=0;t.purchasedLap=-1}});
+}
+
+function players(){renderMyItems();renderAssetSummary();updateTurnBadge();document.getElementById('players').innerHTML=P.map((p,i)=>`<div class="pl ${p.dead?'dead':''}" style="--c:${PC[i]}"><div class="row"><b>${i===turn?'▶ ':''}${p.name}</b><b>${won(p.money)}</b></div><div class="row"><span>증서 ${data.filter(t=>t.owner===i).length}</span><span>${p.jail?'🏝️ '+p.jail+'턴':''}</span></div></div>`).join('')}
 function gameNotice(text,ms=1700){
  if(!text)return;
- const board=document.getElementById('board')||document.getElementById('gameApp');if(!board)return;
+ const board=document.getElementById('gameApp')||document.body;if(!board)return;
  let wrap=document.getElementById('gameNoticeWrap');
  if(!wrap){wrap=document.createElement('div');wrap.id='gameNoticeWrap';wrap.className='game-notice-wrap';board.appendChild(wrap)}
  const n=document.createElement('div');n.className='game-notice';n.textContent=text;wrap.appendChild(n);
@@ -764,6 +887,9 @@ function gameNotice(text,ms=1700){
 function log(s){const box=document.getElementById('log');if(!box)return;let d=document.createElement('div');d.textContent=s;box.prepend(d)}
 function status(s){document.getElementById('turn').textContent=P[turn].name+' 차례';document.getElementById('status').textContent=s}
 function ui(){
+ if(over&&!window._resultShown){window._resultShown=true;setTimeout(showGameResults,250)}
+ if(!over)window._resultShown=false;
+
  let p=P[turn],t=data[p.pos],localIdx=(gameMode==='friend'&&onlineRoomCode)?onlinePlayerIndexFromCurrent():0,h=turn===localIdx&&!over&&!autoPlay;
  document.getElementById('roll').disabled=!h||rolled||actionLocked||p.dead||p.money<=0;
  document.getElementById('buy').disabled=!(h&&rolled&&!actionLocked&&!p.dead&&p.money>0&&(t.type==='CITY'||t.type==='SPECIAL')&&t.owner<0&&p.money>=t.price);
@@ -819,8 +945,8 @@ async function roll(){
  if(gameMode==='friend')onlineRolling=true;
  rolled=true;ui();let a,b;
 if(p.jail){
- soundDice();for(let k=0;k<8;k++){[a,b]=boostedDice();renderDice(a,b,'rolling');if(gameMode==='friend'&&k%2===0)await pushOnlineGame({diceFrame:k});await wait(105)}
- renderDice(a,b,'land');if(gameMode==='friend')await pushOnlineGame({diceLanded:true});await wait(260);
+ soundDice();for(let k=0;k<8;k++){[a,b]=boostedDice();renderDice(a,b,'rolling');if(gameMode==='friend'&&k%2===0)await pushOnlineGame({diceFrame:k});await wait(Math.max(24,105/gameSpeed))}
+ renderDice(a,b,'land');if(gameMode==='friend')await pushOnlineGame({diceLanded:true});await wait(Math.max(70,260/gameSpeed));
  if(a===b){
    p.jail=0;dbl=false;
    status('더블! 무인도 탈출');gameNotice(`🏝️ ${p.name} 더블로 무인도 탈출!`,1800);log(p.name+' 더블로 무인도 탈출');
@@ -838,9 +964,9 @@ if(p.jail){
    return
  }
 }else{
- soundDice();for(let k=0;k<8;k++){[a,b]=boostedDice();renderDice(a,b,'rolling');if(gameMode==='friend'&&k%2===0)await pushOnlineGame({diceFrame:k});await wait(105)}
+ soundDice();for(let k=0;k<8;k++){[a,b]=boostedDice();renderDice(a,b,'rolling');if(gameMode==='friend'&&k%2===0)await pushOnlineGame({diceFrame:k});await wait(Math.max(24,105/gameSpeed))}
  renderDice(a,b,'land');
-}if(gameMode==='friend')await pushOnlineGame({diceLanded:true});await wait(300);dbl=a===b;window._rollDestination=(p.pos+a+b)%40;draw();markDestination(window._rollDestination);for(let k=0;k<a+b;k++){const oldPos=p.pos;p.pos=(p.pos+1)%40;if(p.pos===0){p.money+=200000;p.laps++;log(p.name+' 출발 통과 +20만원 · '+p.laps+'바퀴')}draw();soundStep();await animateTokenStep(turn,oldPos,p.pos);if(gameMode==='friend')await pushOnlineGame();await wait(45)}await land();actionLocked=false;ui();
+}if(gameMode==='friend')await pushOnlineGame({diceLanded:true});await wait(Math.max(80,300/gameSpeed));dbl=a===b;window._rollDestination=(p.pos+a+b)%40;draw();markDestination(window._rollDestination);if(gameMode==='friend')await pushOnlineGame({destination:window._rollDestination});for(let k=0;k<a+b;k++){const oldPos=p.pos;p.pos=(p.pos+1)%40;if(p.pos===0){p.money+=200000;p.laps++;log(p.name+' 출발 통과 +20만원 · '+p.laps+'바퀴')}draw();soundStep();await animateTokenStep(turn,oldPos,p.pos);if(gameMode==='friend')await pushOnlineGame();await wait(Math.max(10,30/gameSpeed))}await land();actionLocked=false;ui();
 if(gameMode==='friend'){
  await pushOnlineGame();
  onlineRolling=false;
@@ -856,7 +982,7 @@ else if(gameMode==='ai'&&turn&&!over){
  }
 else scheduleAutoEnd();
 }
-async function land(){let p=P[turn],t=data[p.pos];inspect(t);if(p.dead){status(`${p.name}은(는) 파산 상태입니다.`);return}log(`${p.name} → ${t.name}`);if(t.type==='CITY'||t.type==='SPECIAL'){if(t.owner>=0&&t.owner!==turn){
+async function land(){let p=P[turn],t=data[p.pos];inspect(t);gameNotice(`📍 ${p.name} → ${t.name||'칸 도착'}`,900);if(p.dead){status(`${p.name}은(는) 파산 상태입니다.`);return}log(`${p.name} → ${t.name}`);if(t.type==='CITY'||t.type==='SPECIAL'){if(t.owner>=0&&t.owner!==turn){
  let x=rent(t);
  if(hasTollPass(p)){
    const canAct=(gameMode!=='friend'&&turn===0)||(gameMode==='friend'&&turn===onlinePlayerIndexFromCurrent());
@@ -885,7 +1011,7 @@ async function land(){let p=P[turn],t=data[p.pos];inspect(t);if(p.dead){status(`
    gameNotice(`💸 ${p.name}이(가) ${P[t.owner].name}에게 ${won(x)} 지불`,1900);
    log(`${p.name} → ${P[t.owner].name} 통행료 ${won(x)} 지불`);
    if(gameMode==='friend')await pushOnlineGame({tollEvent:{phase:'paid',payer:p.name,owner:P[t.owner].name,land:t.name,amount:x,at:Date.now()}});
-   bankrupt(turn);
+   bankrupt(turn,t.owner);
  }
 }else if(t.owner<0){
  status(`${t.name}을(를) 구매할지 선택하세요.`);
@@ -922,9 +1048,9 @@ if(t.type==='KEY'){
   {n:'모든 플레이어에게 5만원씩 받기',fn:async()=>{P.forEach((q,i)=>{if(i!==turn&&!q.dead){q.money-=50000;p.money+=50000}})}}
  ];
  const c=cards[Math.floor(Math.random()*cards.length)];
- status('🔑 '+c.n);gameNotice('🔑 '+c.n,1900);log(p.name+' 황금열쇠: '+c.n);
+ ensureStats(p).keys++;status('🔑 '+c.n);showKeyReveal(p.name,c.n);gameNotice(`🔑 ${p.name} · ${c.n}`,1800);log(p.name+' 황금열쇠: '+c.n);
  await c.fn();bankrupt(turn);
- if(gameMode==='friend')await pushOnlineGame({goldenKey:c.n});
+ if(gameMode==='friend')await pushOnlineGame({goldenKeyEvent:{name:p.name,card:c.n,at:Date.now()}});
 }else if(t.type==='ISLAND'){
  p.jail=3;
  status('무인도! 다음 턴부터 더블로 탈출 · 최대 3턴');
@@ -956,7 +1082,7 @@ function offerWorldTravel(fromCard=false){
    log(`${p.name} 세계여행 이용 불가 · 비용 부족`);
    ui();
    if(gameMode==='friend')pushOnlineGame({worldTravelSkipped:true});
-   scheduleAutoEnd(700);
+   scheduleAutoEnd(Math.max(180,700/gameSpeed));
    return;
  }
 
@@ -975,7 +1101,7 @@ function offerWorldTravel(fromCard=false){
    status('세계여행을 이용하지 않았습니다.');
    ui();
    if(gameMode==='friend')pushOnlineGame();
-   scheduleAutoEnd(600);
+   scheduleAutoEnd(Math.max(160,600/gameSpeed));
  };
  ma.appendChild(cancel);
 
@@ -987,7 +1113,7 @@ function offerWorldTravel(fromCard=false){
        if(P[me].money<fee){
          document.getElementById('modal').classList.remove('show');
          status(`세계여행 비용 ${won(fee)}이 부족합니다.`);
-         scheduleAutoEnd(600);
+         scheduleAutoEnd(Math.max(160,600/gameSpeed));
          return;
        }
        P[me].money-=fee;
@@ -999,7 +1125,7 @@ function offerWorldTravel(fromCard=false){
      draw();ui();
      if(gameMode==='friend')await pushOnlineGame();
      // 세계여행도 일반 주사위 도착과 완전히 동일하게 도착 효과를 먼저 처리한다.
-     window._rollDestination=t.i;draw();markDestination(t.i);
+     window._rollDestination=t.i;draw();markDestination(t.i);if(gameMode==='friend')await pushOnlineGame({destination:t.i});
      await land();
      ui();
      if(gameMode==='friend')await pushOnlineGame();
@@ -1096,11 +1222,11 @@ function offerBuild(t){
  const no=document.createElement('button');no.textContent='건설 안 함';no.onclick=()=>{document.getElementById('modal').classList.remove('show');status('건설하지 않았습니다.');ui();scheduleAutoEnd()};ma.appendChild(no);
  document.querySelectorAll('.build-choice').forEach(btn=>{
    btn.disabled=P[me].money<+btn.dataset.cost;
-   btn.onclick=async()=>{const target=+btn.dataset.level,total=+btn.dataset.cost;P[me].money-=total;t.bld=target;document.getElementById('modal').classList.remove('show');log(`${P[me].name} ${t.name}: ${names[target]} 건설 (${won(total)})`);status(`${t.name}에 ${names[target]} 건설 완료`);ui();if(gameMode==='friend')await pushOnlineGame();scheduleAutoEnd()};
+   btn.onclick=async()=>{const target=+btn.dataset.level,total=+btn.dataset.cost;P[me].money-=total;ensureStats(P[me]).build+=total;t.bld=target;document.getElementById('modal').classList.remove('show');log(`${P[me].name} ${t.name}: ${names[target]} 건설 (${won(total)})`);status(`${t.name}에 ${names[target]} 건설 완료`);ui();if(gameMode==='friend')await pushOnlineGame();scheduleAutoEnd()};
  });
  document.getElementById('modal').classList.add('show');
 }
-function buy(){let p=P[turn],t=data[p.pos];p.money-=t.price;t.owner=turn;t.purchasedLap=p.laps;log(p.name+' '+t.name+' 토지 구매 ('+won(t.price)+')');status('땅 구매 완료');ui()}
+function buy(){let p=P[turn],t=data[p.pos];p.money-=t.price;ensureStats(p).purchase+=t.price;t.owner=turn;t.purchasedLap=p.laps;log(p.name+' '+t.name+' 토지 구매 ('+won(t.price)+')');status('땅 구매 완료');ui()}
 function build(l){let p=P[turn],t=data[p.pos],x=cost(t,l);p.money-=x;t.bld=l;log(`${p.name} ${t.name}: ${['','별장 1채','별장 2채','빌딩','호텔'][l]} 건설 (${won(x)})`);ui()}
 function saleValue(t){
  let v=Math.floor(t.price*.5);
@@ -1109,11 +1235,11 @@ function saleValue(t){
  }
  return v;
 }
-function finishBankruptcy(i){
+function finishBankruptcy(i,creditor=-1){
  const p=P[i];
  if(p.money>=0){status('매각으로 파산을 피했습니다.');ui();return}
  p.dead=true;p.money=0;
- data.filter(x=>x.owner===i).forEach(x=>{x.owner=-1;x.bld=0;x.purchasedLap=-1});
+ transferBankruptAssets(i,creditor);
  const bankruptAt=Date.now();
  log('💀 '+p.name+' 파산');
  status(`💀 ${p.name} 파산!`);gameNotice(`💀 ${p.name} 파산!`,2300);
@@ -1122,7 +1248,39 @@ function finishBankruptcy(i){
  if(a.length===1){over=true;modal('🏆 게임 종료',a[0].name+' 승리!')}
  ui();
 }
-function bankrupt(i){
+
+function propertyValueFor(i){
+ return data.filter(t=>t.owner===i).reduce((sum,t)=>sum+(t.price||0)+(t.type==='CITY'?(t.buildCosts||[]).slice(1,(t.bld||0)+1).reduce((a,b)=>a+(b||0),0):0),0);
+}
+function showGameResults(){
+ if(!window._historySaved){window._historySaved=true;recordGameHistory()}
+ const rows=P.slice(0,gameCount).map((p,i)=>({
+   i,name:p.name,money:p.money||0,property:propertyValueFor(i),
+   total:(p.money||0)+propertyValueFor(i),lands:data.filter(t=>t.owner===i).length,dead:!!p.dead
+ })).sort((a,b)=>b.total-a.total);
+ document.getElementById('mh').textContent='🏆 게임 결과';
+ document.getElementById('mb').innerHTML=`<div class="result-board">${rows.map((r,idx)=>`
+   <div class="result-row ${idx===0?'winner':''}">
+    <div class="result-rank">${idx+1}위</div>
+    <div class="result-name">${escapeHtml(r.name)}</div>
+    <div class="result-stats">
+      <span>현금 <b>${won(r.money)}</b></span>
+      <span>부동산 <b>${won(r.property)}</b></span>
+      <span>보유 땅 <b>${r.lands}개</b></span>
+      <span>총자산 <b>${won(r.total)}</b></span><span>통행료 수입 <b>${won(ensureStats(P[r.i]).tollIncome)}</b></span><span>통행료 지출 <b>${won(ensureStats(P[r.i]).tollPaid)}</b></span><span>구매/건설 <b>${won(ensureStats(P[r.i]).purchase+ensureStats(P[r.i]).build)}</b></span><span>황금열쇠 <b>${ensureStats(P[r.i]).keys}회</b></span>
+    </div>
+   </div>`).join('')}</div>`;
+ const a=document.getElementById('ma');a.innerHTML='';
+ const lobby=document.createElement('button');lobby.textContent='로비로';lobby.onclick=async()=>{
+   document.getElementById('modal').classList.remove('show');
+   if(gameMode==='friend')await leaveOnlineRoom();
+   else screen('lobby');
+ };
+ a.appendChild(lobby);
+ document.getElementById('modal').classList.add('show');
+}
+
+function bankrupt(i,creditor=-1){
  let p=P[i];
  if(p.money>=0)return;
  if(i===0&&!autoPlay){status('현금이 부족합니다. 땅을 매각하세요.');setTimeout(()=>showSellModal(true),120);return}
@@ -1132,7 +1290,7 @@ function bankrupt(i){
    log(`${p.name} ${t.name} 매각 (+${won(v)})`);
    t.owner=-1;t.bld=0;t.purchasedLap=-1;
  }
- finishBankruptcy(i);
+ finishBankruptcy(i,creditor);
 }
 function showSellModal(required=false){
  const me=(gameMode==='friend')?onlinePlayerIndexFromCurrent():0;
@@ -1197,6 +1355,7 @@ function end(){
    }
    return
  }
+ if(consumeTurn())return;
  do turn=(turn+1)%gameCount;while(P[turn]?.dead);
  rolled=false;dbl=false;rollLock=false;status('주사위를 굴리세요.');ui();
  if(gameMode==='ai'&&turn&&!over)setTimeout(()=>ai(),Math.max(100,450/gameSpeed));
@@ -1277,8 +1436,8 @@ function showLandInfo(){
  }));
 }
 function modal(h,b){document.getElementById('mh').textContent=h;document.getElementById('mb').textContent=b;let a=document.getElementById('ma');a.innerHTML='';let q=document.createElement('button');q.textContent='새 게임';q.onclick=()=>{document.getElementById('modal').classList.remove('show');reset()};a.appendChild(q);document.getElementById('modal').classList.add('show')}
-function reset(){
- const ci=document.getElementById('chatInput');if(ci)ci.value='';P=PN.slice(0,gameCount).map((n,i)=>({name:n,money:Number(gameSettings.initialMoney)||2200000,pos:0,jail:0,dead:false,laps:0,items:[]}));data.forEach(t=>{t.owner=-1;t.bld=0;t.purchasedLap=-1});turn=0;rolled=false;dbl=false;over=false;document.getElementById('log').innerHTML='';status('주사위를 굴려 시작하세요.');log('게임 시작 — 40칸 월드 투어');ui()}
+function reset(){window._resultShown=false;window._historySaved=false;
+ const ci=document.getElementById('chatInput');if(ci)ci.value='';turnLimit=Number.isFinite(Number(gameSettings.turnLimit))?Number(gameSettings.turnLimit):50;turnsLeft=turnLimit;P=PN.slice(0,gameCount).map((n,i)=>({name:n,money:Number(gameSettings.initialMoney)||2200000,pos:0,jail:0,dead:false,laps:0,items:[],stats:{tollIncome:0,tollPaid:0,purchase:0,build:0,keys:0}}));data.forEach(t=>{t.owner=-1;t.bld=0;t.purchasedLap=-1});turn=0;rolled=false;dbl=false;over=false;document.getElementById('log').innerHTML='';status('주사위를 굴려 시작하세요.');log('게임 시작 — 40칸 월드 투어');ui()}
 
 
 function setRoomConnectionState(kind,title,detail=''){
@@ -1298,6 +1457,50 @@ function screen(id){
    const banner=document.getElementById('onlineTurnBanner');if(banner&&gameMode==='ai')banner.style.display='none';
  }
 }
+
+function saveOnlineResume(code,role='player'){
+ if(!code)return;
+ localStorage.setItem('wtResumeRoom',code);
+ localStorage.setItem('wtResumeRole',role);
+ localStorage.setItem('wtResumeUid',stableUid());
+}
+function clearOnlineResume(){
+ localStorage.removeItem('wtResumeRoom');localStorage.removeItem('wtResumeRole');localStorage.removeItem('wtResumeUid');
+}
+function findMyRoomPlayerId(room){
+ const uid=stableUid();
+ const hit=Object.entries(room?.players||{}).find(([id,p])=>id===onlinePlayerId||p?.uid===uid);
+ if(hit)return hit[0];
+ const snap=Object.entries(room?.playerSnapshot||{}).find(([id,p])=>id===onlinePlayerId||p?.uid===uid);
+ return snap?.[0]||null;
+}
+async function resumeOnlineGame(){
+ const code=localStorage.getItem('wtResumeRoom')||localStorage.getItem('wtOnlineRoom');
+ if(!code)return false;
+ try{
+   setRoomConnectionState('loading','게임 복구 중...',`방 ${code} 상태를 확인하고 있습니다.`);
+   const snap=await rtdb.ref(`rooms/${code}`).once('value'),room=snap.val();
+   if(!room){clearOnlineResume();localStorage.removeItem('wtOnlineRoom');return false}
+   const pid=findMyRoomPlayerId(room);
+   if(!pid){clearOnlineResume();return false}
+   onlinePlayerId=pid;onlineRoomCode=code;latestOnlineRoom=room;
+   localStorage.setItem('wtOnlineRoom',code);localStorage.setItem('wtOnlineRole','player');saveOnlineResume(code,'player');
+   // 접속 상태를 다시 살리고 끊기면 offline만 기록한다. 플레이어 자리 자체는 지우지 않는다.
+   await rtdb.ref(`rooms/${code}/players/${pid}`).update({online:true,lastSeen:firebase.database.ServerValue.TIMESTAMP,uid:stableUid()});
+   rtdb.ref(`rooms/${code}/players/${pid}`).onDisconnect().update({online:false,lastSeen:firebase.database.ServerValue.TIMESTAMP});
+   watchOnlineRoom(code);watchChat(code);
+   if(room.status==='playing'&&room.game){
+     gameMode='friend';gameCount=orderedOnlinePlayers(room).length;
+     screen('gameApp');document.body.classList.add('friend-online');applyRemoteGame(room.game,room);
+     gameNotice('↻ 온라인 게임에 다시 연결되었습니다.',1400);
+   }else{
+     screen('waitingRoom');
+     setRoomConnectionState('online','● 게임 온라인',`방 ${code} · 재접속 완료`);
+   }
+   return true;
+ }catch(e){return false}
+}
+
 function makeCode(){return Math.random().toString(36).slice(2,8).toUpperCase()}
 document.getElementById('openRoom').onclick=()=>screen('roomSetup');
 document.getElementById('openJoin').onclick=()=>screen('joinRoom');
@@ -1310,6 +1513,7 @@ document.getElementById('joinSubmit').onclick=()=>{
 };
 document.getElementById('joinCode').oninput=e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
 
+document.getElementById('openHistory').onclick=showHistory;
 document.getElementById('openAI').onclick=async()=>{
  await stopSpectating(true);
  gameMode='ai';latestOnlineRoom=null;onlineRoomCode=null;
@@ -1420,7 +1624,7 @@ function updateAutoControls(){
  b.classList.toggle('on',autoPlay);
  document.getElementById('gameSpeed').value=String(gameSpeed);
 }
-document.getElementById('gameSpeed').onchange=e=>{gameSpeed=+e.target.value;};
+document.getElementById('gameSpeed').onchange=e=>{gameSpeed=Math.max(1,+e.target.value||1);status(`${gameSpeed}배속 적용`);};
 document.getElementById('autoPlay').onclick=()=>{
  if(gameMode!=='ai'||over)return;
  autoPlay=!autoPlay;updateAutoControls();ui();
@@ -1438,11 +1642,7 @@ function autoPlayTick(){
  setTimeout(autoPlayTick,220);
 }
 
-document.getElementById('landInfo').onclick=()=>{
- const p=P[turn],t=data[p?.pos];
- if(!t)return;
- showTileInfo(t);
-};
+document.getElementById('landInfo').onclick=showLandInfo;
 document.getElementById('sellLand').onclick=()=>showSellModal(false);
 document.getElementById('roll').onclick=roll;document.getElementById('buy').onclick=buy;document.getElementById('end').onclick=end;</script>
 <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
@@ -1619,6 +1819,24 @@ function watchFriendRequests(){
   box.appendChild(row);
  });
 }
+
+async function toggleReady(){
+ if(!onlineRoomCode||!onlinePlayerId)return;
+ const ref=rtdb.ref(`rooms/${onlineRoomCode}/players/${onlinePlayerId}/ready`);
+ const v=(await ref.once('value')).val();await ref.set(!v);
+}
+async function runStartCountdown(){
+ for(const n of ['3','2','1','START']){
+   const o=document.createElement('div');o.className='countdown-overlay';o.textContent=n;document.body.appendChild(o);
+   await new Promise(r=>setTimeout(r,n==='START'?650:800));o.remove();
+ }
+}
+async function transferHostIfNeeded(code,room,leavingId){
+ if(room?.host!==leavingId)return;
+ const next=Object.entries(room.players||{}).filter(([id])=>id!==leavingId).sort((a,b)=>(a[1]?.joinedAt||0)-(b[1]?.joinedAt||0))[0];
+ if(next)await rtdb.ref(`rooms/${code}/host`).set(next[0]);
+}
+
 async function createOnlineRoom(maxPlayers){
  onlinePlayerId=makePlayerId();
  let code, snap;
@@ -1631,7 +1849,7 @@ async function createOnlineRoom(maxPlayers){
    host:onlinePlayerId,maxPlayers:Number(maxPlayers)||4,status:'waiting',
    public:!!gameSettings.isPublic,settings:gameSettings,
    createdAt:firebase.database.ServerValue.TIMESTAMP,turnIndex:0,turnSeq:0,
-   players:{[onlinePlayerId]:{name:myNick()||onlineName(),uid:stableUid(),joinedAt:firebase.database.ServerValue.TIMESTAMP}}
+   players:{[onlinePlayerId]:{name:myNick()||onlineName(),uid:stableUid(),online:true,ready:false,joinedAt:firebase.database.ServerValue.TIMESTAMP}}
  });
 
  localStorage.setItem('wtOnlineRoom',code);localStorage.setItem('wtOnlineRole','host');
@@ -1648,7 +1866,7 @@ async function joinOnlineRoom(code){
  if(room.status!=='waiting')throw new Error('이미 시작된 방입니다.');
  if(players.length>=room.maxPlayers)throw new Error('방이 가득 찼습니다.');
  onlinePlayerId=makePlayerId();onlineRoomCode=code;
- await ref.child('players/'+onlinePlayerId).set({name:myNick()||onlineName(),uid:stableUid(),joinedAt:firebase.database.ServerValue.TIMESTAMP});
+ await ref.child('players/'+onlinePlayerId).set({name:myNick()||onlineName(),uid:stableUid(),online:true,ready:false,joinedAt:firebase.database.ServerValue.TIMESTAMP});
 
  localStorage.setItem('wtOnlineRoom',code);localStorage.setItem('wtOnlineRole','guest');
  watchOnlineRoom(code);watchChat(code);return room;
@@ -1660,7 +1878,7 @@ function watchOnlineRoom(code){
  onlineRoomListener=rtdb.ref('rooms/'+code).on('value',snap=>{
    if(!snap.exists()){setRoomConnectionState('error','방 연결 끊김','방이 삭제되었거나 존재하지 않습니다.');localStorage.removeItem('wtOnlineRoom');screen('lobby');return}
    
-const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=room;
+const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=room;if(room.countdownAt&&room.countdownAt>Number(sessionStorage.getItem('wtCountdownSeen')||0)){sessionStorage.setItem('wtCountdownSeen',room.countdownAt);runStartCountdown();}
    setRoomConnectionState('online','● 게임 온라인',`방 ${code} · 참가자 ${entries.length}/${Number(room.maxPlayers||2)}명 · 실시간 연결됨`);
 
    const isMember=!!room.players?.[onlinePlayerId]||!!room.playerSnapshot?.[onlinePlayerId];
@@ -1671,6 +1889,8 @@ const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=
    }else if(room.status==='waiting'){
      screen('waitingRoom');watchChat(code);
    }
+   const ke=room.game?.goldenKeyEvent;
+   if(ke?.at&&ke.at>window._keySeen){window._keySeen=ke.at;showKeyReveal(ke.name,ke.card);gameNotice(`🔑 ${ke.name} · ${ke.card}`,1800)}
    const ie=room.game?.itemEvent;
    if(ie?.at&&ie.at>window._itemSeen){window._itemSeen=ie.at;gameNotice(`🎫 ${ie.name} 면제권 사용 · ${ie.land} 통행료 면제`,1800)}
    const te=room.game?.tollEvent;
@@ -1716,18 +1936,19 @@ const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=
        const row=document.createElement('div');row.className='player-slot';
        if(entries[i]){
          const [id,p]=entries[i];
-         row.className='room-slot';row.innerHTML=`<span>${id===room.host?'👑 ': '👤 '}${id===onlinePlayerId?'나':(p.name||'플레이어')}</span><span>${id===room.host?'방장':'접속 중'}</span>`;
+         row.className='room-slot';row.innerHTML=`<span>${id===room.host?'👑 ': '👤 '}${id===onlinePlayerId?'나':(p.name||'플레이어')}</span><span>${p.ready?'✅ 준비':'⏳ 대기'}${p.online===false?' · 재접속 대기':''}</span>`;
        }else{row.className='room-slot empty';row.innerHTML='<span>빈 자리</span><span>친구 대기 중</span>';}
        slots.appendChild(row);
      }
    }
+   const readyBtn=document.getElementById('readyRoom'),meEntry=room.players?.[onlinePlayerId];
+   if(readyBtn){readyBtn.classList.toggle('ready',!!meEntry?.ready);readyBtn.textContent=meEntry?.ready?'준비 완료 ✓':'준비';}
    const start=document.getElementById('startRoom');
    if(start){
-     const host=room.host===onlinePlayerId;
-     start.disabled=false;
-     const ready=host&&entries.length===Number(room.maxPlayers||2);
-     start.classList.toggle('ready',ready);
-     start.textContent=host?(ready?'게임 시작':`친구를 기다리는 중... (${entries.length}/${room.maxPlayers})`):'방장이 시작하기를 기다리는 중...';
+     const host=room.host===onlinePlayerId,full=entries.length===Number(room.maxPlayers||2),allReady=full&&entries.every(([,p])=>p.ready);
+     start.disabled=!host||!allReady;
+     start.classList.toggle('ready',host&&allReady);
+     start.textContent=host?(allReady?'게임 시작':`전원 준비 대기 (${entries.filter(([,p])=>p.ready).length}/${room.maxPlayers})`):'방장이 시작하기를 기다리는 중...';
    }
    if(room.status==='playing'){
      
@@ -1751,7 +1972,7 @@ async function leaveOnlineRoom(){
  const code=onlineRoomCode||localStorage.getItem('wtOnlineRoom'),id=onlinePlayerId||makePlayerId();
  if(code){
   const snap=await rtdb.ref('rooms/'+code).once('value'),room=snap.val();
-  if(room){if(room.host===id)await rtdb.ref('rooms/'+code).remove();else await rtdb.ref(`rooms/${code}/players/${id}`).remove();}
+  if(room){await transferHostIfNeeded(code,room,id);await rtdb.ref(`rooms/${code}/players/${id}`).remove();}
  }
  localStorage.removeItem('wtOnlineRoom');localStorage.removeItem('wtOnlineRole');onlineRoomCode=null;screen('lobby');
 }
@@ -1765,7 +1986,7 @@ async function restoreOnlineRoom(){
  if(room.status==='waiting'&&!room.players?.[id]){
   const count=Object.keys(room.players||{}).length;
   if(count>=Number(room.maxPlayers||2)){localStorage.removeItem('wtOnlineRoom');return}
-  await rtdb.ref(`rooms/${code}/players/${id}`).set({name:myNick()||onlineName(),uid:stableUid(),joinedAt:firebase.database.ServerValue.TIMESTAMP});
+  await rtdb.ref(`rooms/${code}/players/${id}`).set({name:myNick()||onlineName(),uid:stableUid(),online:true,joinedAt:firebase.database.ServerValue.TIMESTAMP});
  }
  onlinePlayerId=id;onlineRoomCode=code;
  screen(room.status==='playing'?'gameApp':'waitingRoom');
@@ -1773,7 +1994,7 @@ async function restoreOnlineRoom(){
 }
 
 
-let applyingRemoteGame=false,latestOnlineRoom=null,onlineRolling=false,rollLock=false,actionLocked=false;window._bankruptSeen=0;window._tollSeen=0;window._jailSeen=0;window._itemSeen=0;
+let applyingRemoteGame=false,latestOnlineRoom=null,onlineRolling=false,rollLock=false,actionLocked=false;window._bankruptSeen=0;window._tollSeen=0;window._jailSeen=0;window._itemSeen=0;window._keySeen=0;
 let spectating=false,spectatorId=null,spectatorRoomCode=null,spectatorListener=null;
 function onlinePlayerIndexFromCurrent(){return latestOnlineRoom?onlinePlayerIndex(latestOnlineRoom):0}
 function onlinePlayerIndex(room,id=onlinePlayerId){
@@ -1781,10 +2002,11 @@ function onlinePlayerIndex(room,id=onlinePlayerId){
 }
 function packOnlineGame(extra={}){
  return {
-  players:P.map(p=>({name:p.name,money:p.money,pos:p.pos,jail:p.jail,dead:!!p.dead,laps:p.laps||0,items:Array.isArray(p.items)?p.items:[]})),
+  players:P.map(p=>({name:p.name,money:p.money,pos:p.pos,jail:p.jail,dead:!!p.dead,laps:p.laps||0,items:Array.isArray(p.items)?p.items:[],stats:ensureStats(p)})),
   lands:data.map(t=>({owner:t.owner,bld:t.bld,purchasedLap:t.purchasedLap})),
-  turn,rolled:!!rolled,dbl:!!dbl,over:!!over,
+  turn,rolled:!!rolled,dbl:!!dbl,over:!!over,turnLimit,turnsLeft,
   diceState:window.currentDiceState||{a:1,b:1,rolling:false},
+  destination:Number.isInteger(window._rollDestination)?window._rollDestination:null,
   message:document.getElementById('status').textContent,
   settings:gameSettings,
   updatedAt:firebase.database.ServerValue.TIMESTAMP,...extra
@@ -1812,7 +2034,7 @@ function applyRemoteGame(g,room){
  gameCount=arr.length;
  P=g.players.map((p,i)=>({...p,name:(arr[i]&&arr[i][1].name)||p.name||`플레이어 ${i+1}`}));
  if(Array.isArray(g.lands))g.lands.forEach((x,i)=>{if(data[i]&&x){data[i].owner=x.owner;data[i].bld=x.bld;data[i].purchasedLap=x.purchasedLap}});
- turn=Number(g.turn)||0;rolled=!!g.rolled;dbl=!!g.dbl;over=!!g.over;
+ turn=Number(g.turn)||0;rolled=!!g.rolled;dbl=!!g.dbl;over=!!g.over;turnLimit=Number.isFinite(Number(g.turnLimit))?Number(g.turnLimit):(Number.isFinite(Number(g.settings?.turnLimit))?Number(g.settings.turnLimit):50);turnsLeft=Number.isFinite(Number(g.turnsLeft))?Number(g.turnsLeft):turnLimit;window._rollDestination=Number.isInteger(g.destination)?g.destination:null;
  if(g.message!=null)document.getElementById('status').textContent=g.message;
  players();draw();renderMyItems();applyOnlineTurn(room);
  applyingRemoteGame=false;
@@ -1906,6 +2128,7 @@ async function onlineEndTurn(){
  if(dbl&&!P[turn].dead){
   rolled=false;dbl=false;status('더블! 한 번 더 굴립니다.');ui();await pushOnlineGame();return true;
  }
+ if(consumeTurn()){await pushOnlineGame();return true}
  do turn=(turn+1)%gameCount;while(P[turn]?.dead);
  rolled=false;dbl=false;status('주사위를 굴리세요.');ui();await pushOnlineGame();return true;
 }
@@ -1921,17 +2144,17 @@ async function startOnlineGame(){
    if(!room||room.host!==onlinePlayerId||room.status!=='waiting')return;
    const joined=Object.entries(room.players||{}).sort((a,b)=>(a[1]?.joinedAt||0)-(b[1]?.joinedAt||0));
    const max=Number(room.maxPlayers||2);
-   if(joined.length!==max)return;
+   if(joined.length!==max||!joined.every(([,p])=>p.ready))return;
    const arr=shuffleArray(joined),order=arr.map(x=>x[0]);
    const settings={...gameSettings,...(room.settings||{})};
    const money=Number(settings.initialMoney)||2200000;
    const snapshot=Object.fromEntries(arr.map(([id,p])=>[id,{name:p.name||'플레이어',uid:p.uid||id,joinedAt:p.joinedAt||0}]));
-   room.status='playing';room.playerOrder=order;room.playerSnapshot=snapshot;room.turnIndex=0;room.turnSeq=0;
+   room.status='playing';room.playerOrder=order;room.playerSnapshot=snapshot;room.turnIndex=0;room.turnSeq=0;room.countdownAt=Date.now();
    room.startedAt=Date.now();
    room.game={
-    players:arr.map(([id,p])=>({name:p.name||'플레이어',money,pos:0,jail:0,dead:false,laps:0,items:[]})),
+    players:arr.map(([id,p])=>({name:p.name||'플레이어',money,pos:0,jail:0,dead:false,laps:0,items:[],stats:{tollIncome:0,tollPaid:0,purchase:0,build:0,keys:0}})),
     lands:data.map(()=>({owner:-1,bld:0,purchasedLap:-1})),
-    turn:0,rolled:false,dbl:false,over:false,diceState:{a:1,b:1,rolling:false},
+    turn:Math.floor(Math.random()*arr.length),rolled:false,dbl:false,over:false,turnLimit:Number.isFinite(Number(settings.turnLimit))?Number(settings.turnLimit):50,turnsLeft:Number.isFinite(Number(settings.turnLimit))?Number(settings.turnLimit):50,diceState:{a:1,b:1,rolling:false},
     message:'주사위를 굴려 시작하세요.',settings,updatedAt:Date.now()
    };
    return room;
@@ -1964,7 +2187,7 @@ window.addEventListener('load',()=>{
  const tm=document.getElementById('tabMyFriends');if(tm)tm.onclick=()=>{friendMode='friends';setFriendTab();renderFriendList()};
  const to=document.getElementById('tabOnlineUsers');if(to)to.onclick=()=>{friendMode='online';setFriendTab();renderFriendList()};
  // 새로고침해도 같은 탭의 방 참가 상태를 유지한다.
- setTimeout(()=>restoreOnlineRoom().catch(()=>{}),80);
+ setTimeout(async()=>{const resumed=await resumeOnlineGame();if(!resumed)restoreOnlineRoom().catch(()=>{})},120);
  const wb=document.getElementById('waitingBack');if(wb)wb.onclick=leaveOnlineRoom;
  const oldRoom=document.getElementById('openRoom');
  if(oldRoom) oldRoom.onclick=()=>screen('roomSetup');
@@ -2135,7 +2358,7 @@ async function startSpectating(code){
  spectatorId='s_'+makePlayerId();
  const ref=rtdb.ref(`rooms/${code}/spectators/${spectatorId}`);
  await ref.set({name:myNick()||'관전자',joinedAt:firebase.database.ServerValue.TIMESTAMP});
- ref.onDisconnect().remove();
+ ref.onDisconnect().update({online:false,lastSeen:firebase.database.ServerValue.TIMESTAMP});
  gameMode='spectator';latestOnlineRoom=room;
  screen('gameApp');document.getElementById('gameApp').classList.add('spectating');
  document.getElementById('spectatorBadge').style.display='';
