@@ -700,6 +700,7 @@ if(p.jail){
  status(`무인도 탈출 실패 · ${p.jail}턴 남음`);log(p.name+' 무인도 탈출 실패');ui();
  if(gameMode==='friend'){await pushOnlineGame();onlineRolling=false;}
  rollLock=false;
+ if(gameMode==='ai'&&turn!==0&&!over)setTimeout(()=>end(),Math.max(100,350/gameSpeed));
  return
 }
    status('3턴 경과로 무인도 탈출');log(p.name+' 무인도 자동 탈출');
@@ -1025,7 +1026,14 @@ function end(){
  }
  let p=P[turn];
  if(!rolled){status('먼저 주사위를 굴려주세요.');return}
- if(dbl&&!p.dead){rolled=false;dbl=false;rollLock=false;status('더블! 한 번 더 굴립니다.');ui();return}
+ if(dbl&&!p.dead){
+   rolled=false;dbl=false;rollLock=false;
+   status('더블! 한 번 더 굴립니다.');ui();
+   if(gameMode==='ai'&&turn!==0&&!over){
+     setTimeout(()=>{if(gameMode==='ai'&&turn!==0&&!over&&!rolled)ai()},Math.max(120,500/gameSpeed));
+   }
+   return
+ }
  do turn=(turn+1)%gameCount;while(P[turn]?.dead);
  rolled=false;dbl=false;rollLock=false;status('주사위를 굴리세요.');ui();
  if(gameMode==='ai'&&turn&&!over)setTimeout(()=>ai(),Math.max(100,450/gameSpeed));
