@@ -408,6 +408,19 @@ body.friend-online #autoPlay,body.friend-online #gameSpeed{display:none!importan
 .public-list{display:grid;gap:7px;margin-top:10px}
 .public-room{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px;border:1px solid #29465a;border-radius:9px}
 .public-room small{color:#91a8ba}
+
+.dice{display:flex!important;justify-content:center;align-items:center;gap:10px;min-height:58px}
+.die3d{display:inline-grid;place-items:center;width:48px;height:48px;border-radius:11px;background:#f5f7fb;color:#101923;font-size:31px;font-weight:900;border:2px solid #b8c7d4;box-shadow:0 5px 0 #8394a3,0 8px 16px #0008;transform-origin:center}
+.die3d.rolling{animation:diceShake .12s linear infinite}.die3d.land{animation:diceLand .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes diceShake{0%{transform:translate(-2px,-2px) rotate(-10deg)}25%{transform:translate(3px,1px) rotate(13deg) scale(1.06)}50%{transform:translate(-1px,3px) rotate(-6deg)}75%{transform:translate(2px,-2px) rotate(8deg) scale(1.04)}100%{transform:translate(-2px,-2px) rotate(-10deg)}}
+@keyframes diceLand{0%{transform:translateY(-13px) rotate(-18deg) scale(1.18)}55%{transform:translateY(3px) rotate(8deg) scale(.94)}100%{transform:none}}
+.order-pop{position:absolute;z-index:40;left:50%;top:50%;transform:translate(-50%,-50%);background:#081824ee;border:1px solid #4f7189;border-radius:14px;padding:16px 20px;min-width:240px;text-align:center;box-shadow:0 15px 45px #000a}.order-pop h3{margin:0 0 9px}.order-line{padding:5px;font-weight:800}
+
+.die3d{position:relative!important;font-size:0!important}
+.die3d .pip{position:absolute;width:8px;height:8px;border-radius:50%;background:#101923;box-shadow:inset 0 1px 2px #0006}
+.die3d .tl{left:10px;top:10px}.die3d .tc{left:19px;top:10px}.die3d .tr{right:10px;top:10px}
+.die3d .ml{left:10px;top:19px}.die3d .mc{left:19px;top:19px}.die3d .mr{right:10px;top:19px}
+.die3d .bl{left:10px;bottom:10px}.die3d .bc{left:19px;bottom:10px}.die3d .br{right:10px;bottom:10px}
 </style></head>
 <body>
 <div id="lobby" class="lobby-screen">
@@ -640,6 +653,25 @@ function boostedDice(){
  if(boost>1 && Math.random()<Math.min(.65,(boost-1)*.32))b=a;
  return [a,b];
 }
+
+function shuffleArray(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function dicePips(n){
+ const map={
+  1:['mc'],
+  2:['tl','br'],
+  3:['tl','mc','br'],
+  4:['tl','tr','bl','br'],
+  5:['tl','tr','mc','bl','br'],
+  6:['tl','tr','ml','mr','bl','br']
+ };
+ return (map[Math.max(1,Math.min(6,n))]||map[1]).map(p=>`<i class="pip ${p}"></i>`).join('');
+}
+function renderDice(a=1,b=1,cls=''){
+ const d=document.getElementById('dice');if(!d)return;
+ d.innerHTML=`<span class="die3d ${cls}" aria-label="${a}">${dicePips(a)}</span><span class="die3d ${cls}" aria-label="${b}">${dicePips(b)}</span>`;
+}
+function showTurnOrder(){const old=document.getElementById('orderPop');if(old)old.remove();const box=document.createElement('div');box.id='orderPop';box.className='order-pop';box.innerHTML=`<h3>🎲 이번 게임 순서</h3>${P.slice(0,gameCount).map((p,i)=>`<div class="order-line">${i+1}. ${escapeHtml(p.name)}</div>`).join('')}`;const board=document.getElementById('board');if(board){board.style.position='relative';board.appendChild(box);setTimeout(()=>box.remove(),2200)}}
+
 async function roll(){
  if(rollLock||rolled||over)return;
  rollLock=true;
@@ -647,7 +679,7 @@ async function roll(){
  if(gameMode==='friend')onlineRolling=true;
  rolled=true;ui();let a,b;
 if(p.jail){
- for(let k=0;k<7;k++){[a,b]=boostedDice();document.getElementById('dice').textContent=F[a-1]+' '+F[b-1];if(gameMode==='friend')await pushOnlineGame();await wait(60)}
+ for(let k=0;k<7;k++){[a,b]=boostedDice();renderDice(a,b,'rolling');if(gameMode==='friend')await pushOnlineGame();await wait(60)}
  if(a===b){
    p.jail=0;dbl=false;status('더블! 무인도 탈출');log(p.name+' 더블로 무인도 탈출');
  }else{
@@ -661,7 +693,7 @@ if(p.jail){
    status('3턴 경과로 무인도 탈출');log(p.name+' 무인도 자동 탈출');
  }
 }
-for(let k=0;k<7;k++){[a,b]=boostedDice();document.getElementById('dice').textContent=F[a-1]+' '+F[b-1];if(gameMode==='friend')await pushOnlineGame();await wait(60)}dbl=a===b;for(let k=0;k<a+b;k++){p.pos=(p.pos+1)%40;if(p.pos===0){p.money+=200000;p.laps++;log(p.name+' 출발 통과 +20만원 · '+p.laps+'바퀴')}draw();if(gameMode==='friend')await pushOnlineGame();await wait(80)}await land();ui();
+for(let k=0;k<7;k++){[a,b]=boostedDice();renderDice(a,b,'rolling');if(gameMode==='friend')await pushOnlineGame();await wait(60)}renderDice(a,b,'land');await wait(220);dbl=a===b;for(let k=0;k<a+b;k++){p.pos=(p.pos+1)%40;if(p.pos===0){p.money+=200000;p.laps++;log(p.name+' 출발 통과 +20만원 · '+p.laps+'바퀴')}draw();if(gameMode==='friend')await pushOnlineGame();await wait(80)}await land();ui();
 if(gameMode==='friend'){
  await pushOnlineGame();
  onlineRolling=false;
@@ -1061,7 +1093,8 @@ function showLandInfo(){
  }));
 }
 function modal(h,b){document.getElementById('mh').textContent=h;document.getElementById('mb').textContent=b;let a=document.getElementById('ma');a.innerHTML='';let q=document.createElement('button');q.textContent='새 게임';q.onclick=()=>{document.getElementById('modal').classList.remove('show');reset()};a.appendChild(q);document.getElementById('modal').classList.add('show')}
-function reset(){P=PN.slice(0,gameCount).map((n,i)=>({name:n,money:Number(gameSettings.initialMoney)||2200000,pos:0,jail:0,dead:false,laps:0}));data.forEach(t=>{t.owner=-1;t.bld=0;t.purchasedLap=-1});turn=0;rolled=false;dbl=false;over=false;document.getElementById('log').innerHTML='';status('주사위를 굴려 시작하세요.');log('게임 시작 — 40칸 월드 투어');ui()}
+function reset(){
+ const cb=document.getElementById('chatMessages');if(cb)cb.innerHTML='';const ci=document.getElementById('chatInput');if(ci)ci.value='';P=PN.slice(0,gameCount).map((n,i)=>({name:n,money:Number(gameSettings.initialMoney)||2200000,pos:0,jail:0,dead:false,laps:0}));data.forEach(t=>{t.owner=-1;t.bld=0;t.purchasedLap=-1});turn=0;rolled=false;dbl=false;over=false;document.getElementById('log').innerHTML='';status('주사위를 굴려 시작하세요.');log('게임 시작 — 40칸 월드 투어');ui()}
 
 function screen(id){
  ['lobby','roomSetup','waitingRoom','joinRoom','publicLobby','friendLobby','aiSetup','gameApp'].forEach(x=>document.getElementById(x).classList.add('hidden'));
@@ -1115,7 +1148,7 @@ document.querySelectorAll('.ai-count').forEach(b=>b.onclick=()=>{
   keyBoost:Number(document.getElementById('aiKey')?.value)||1,
   isPublic:false
  };
- gameMode='ai';gameCount=+b.dataset.count;autoPlay=false;gameSpeed=2;screen('gameApp');reset();updateAutoControls();
+ gameMode='ai';gameCount=+b.dataset.count;autoPlay=false;gameSpeed=2;screen('gameApp');reset();const sh=shuffleArray(P.slice(0,gameCount));P.splice(0,gameCount,...sh);turn=0;ui();showTurnOrder();updateAutoControls();
 });
 
 
@@ -1187,7 +1220,7 @@ document.getElementById('autoPlay').onclick=()=>{
  if(autoPlay&&turn===0&&!rolled&&!over)setTimeout(roll,80);
 };
 
-document.getElementById('roll').onclick=roll;document.getElementById('buy').onclick=buy;document.getElementById('end').onclick=end;document.getElementById('reset').onclick=reset;document.getElementById('landInfo').onclick=showLandInfo;document.getElementById('sellLand').onclick=()=>showSellModal(false);screen('lobby');
+document.getElementById('roll').onclick=roll;document.getElementById('buy').onclick=buy;document.getElementById('end').onclick=end;document.getElementById('reset').onclick=async()=>{await resetChat();reset()};document.getElementById('landInfo').onclick=showLandInfo;document.getElementById('sellLand').onclick=()=>showSellModal(false);screen('lobby');
 </script>
 <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-database-compat.js"></script>
@@ -1392,6 +1425,7 @@ const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=
      start.textContent=host?(ready?'게임 시작':`친구를 기다리는 중... (${entries.length}/${room.maxPlayers})`):'방장이 시작하기를 기다리는 중...';
    }
    if(room.status==='playing'){
+     if(room.playerOrder&&!document.getElementById('orderPop'))setTimeout(showTurnOrder,120);
      if(!room.players || !room.players[onlinePlayerId]){localStorage.removeItem('wtOnlineRoom');localStorage.removeItem('wtOnlineRole');return}
      gameMode='friend';gameCount=entries.length;
      if(!chatListener)watchChat(code);
@@ -1489,6 +1523,15 @@ function watchChat(code){
  chatListener={ref,cb};
 }
 function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function resetChat(){
+ const box=document.getElementById('chatMessages');
+ if(box)box.innerHTML='';
+ const input=document.getElementById('chatInput');
+ if(input)input.value='';
+ if(gameMode==='friend'&&onlineRoomCode){
+   try{await rtdb.ref(`rooms/${onlineRoomCode}/chat`).remove()}catch(e){}
+ }
+}
 async function sendChat(){
  const input=document.getElementById('chatInput');
  const msg=(input?.value||'').trim();
@@ -1509,7 +1552,12 @@ async function sendChat(){
 }
 
 function orderedOnlinePlayers(room){
- return Object.entries(room.players||{}).sort((a,b)=>(a[1].joinedAt||0)-(b[1].joinedAt||0));
+ const entries=Object.entries(room?.players||{});
+ if(Array.isArray(room?.playerOrder)&&room.playerOrder.length){
+  const map=Object.fromEntries(entries);
+  return room.playerOrder.filter(id=>map[id]).map(id=>[id,map[id]]);
+ }
+ return entries.sort((a,b)=>(a[1]?.joinedAt||0)-(b[1]?.joinedAt||0));
 }
 function applyOnlineTurn(room){
  if(room.status!=='playing')return;
@@ -1547,15 +1595,18 @@ async function startOnlineGame(){
  const snap=await ref.once('value');
  const room=snap.val();
  if(!room || room.host!==onlinePlayerId)return;
- const arr=orderedOnlinePlayers(room);
+ const arr=shuffleArray(orderedOnlinePlayers(room));
  gameCount=arr.length;
  gameMode='friend';
  reset();
  P.forEach((p,i)=>p.name=arr[i]?.[1]?.name||p.name);
+ const playerOrder=arr.map(x=>x[0]);
+ showTurnOrder();
  await ref.update({
    status:'playing',
    turnIndex:0,
    turnSeq:0,
+   playerOrder,
    game:packOnlineGame(),
    startedAt:firebase.database.ServerValue.TIMESTAMP
  });
