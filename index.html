@@ -472,7 +472,7 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
 .result-row.winner{border-width:2px}.result-rank{font-weight:900;font-size:13px}.result-name{font-weight:900}.result-stats{grid-column:1/3;display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px;color:#9fb2c1}.result-stats b{color:#eef6ff}
 
 .turn-limit-badge{display:inline-flex;align-items:center;padding:7px 10px;border:1px solid #42627a;border-radius:8px;background:#102538;font-size:11px;font-weight:900}
-.ready-actions{display:grid;grid-template-columns:1fr 1.6fr;gap:7px}.ready-actions #readyRoom.ready{background:#168c58;border-color:#4ee09a}.ready-actions #startRoom{margin:0}
+.ready-actions{display:grid;grid-template-columns:1fr;gap:7px}.ready-actions.all-ready{grid-template-columns:1fr 1.6fr}.ready-actions #readyRoom.ready{background:#168c58;border-color:#4ee09a}.ready-actions #startRoom{margin:0}
 .asset-mini{padding:6px 0;border-bottom:1px solid #20384a;font-size:10px}.asset-mini:last-child{border-bottom:0}.asset-mini .asset-top{display:flex;justify-content:space-between;font-weight:900}.asset-mini .asset-sub{color:#91a7b8;margin-top:3px}
 .key-reveal{position:fixed;inset:0;z-index:10020;display:flex;align-items:center;justify-content:center;background:#0008;pointer-events:none}.key-card-big{width:min(310px,82vw);padding:24px 18px;border-radius:18px;background:linear-gradient(145deg,#d8a62f,#fff0a4 45%,#b77d16);color:#201500;border:3px solid #fff4b8;box-shadow:0 20px 60px #000a;text-align:center;animation:keyFlip .62s ease both}.key-card-big .key-icon{font-size:50px}.key-card-big b{display:block;font-size:20px;margin:8px 0}.key-card-big small{font-size:12px;font-weight:800}@keyframes keyFlip{0%{transform:perspective(700px) rotateY(90deg) scale(.75);opacity:0}65%{transform:perspective(700px) rotateY(-8deg) scale(1.04)}100%{transform:none;opacity:1}}
 .countdown-overlay{position:fixed;inset:0;z-index:10030;background:#000b;display:flex;align-items:center;justify-content:center;font-size:min(22vw,150px);font-weight:1000;text-shadow:0 8px 30px #000;animation:countPop .7s ease both}@keyframes countPop{0%{transform:scale(.45);opacity:0}35%{transform:scale(1.12);opacity:1}100%{transform:scale(1);opacity:.92}}
@@ -505,7 +505,7 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
       <label>자동플레이 <select id="setAuto"><option value="true">허용</option><option value="false">사용 불가</option></select></label>
       <label>배속 <select id="setSpeed"><option value="true">허용</option><option value="false">1배속 고정</option></select></label>
       <label>더블 확률 <select id="setDouble"><option value="1">기본</option><option value="1.5">높음</option><option value="2">매우 높음</option></select></label>
-      <label>황금열쇠 확률 <select id="setKey"><option value="1">기본</option><option value="1.5">높음</option><option value="2">매우 높음</option></select></label><label>턴 제한 <select id="setTurnLimit"><option value="0">제한 없음</option><option value="30">30턴</option><option value="50" selected>50턴</option><option value="100">100턴</option></select></label>
+      <label>황금열쇠 확률 <select id="setKey"><option value="1">기본</option><option value="1.5">높음</option><option value="2">매우 높음</option></select></label><label>턴 제한 <select id="setTurnLimit"><option value="0" selected>제한 없음</option><option value="30">30턴</option><option value="50">50턴</option><option value="100">100턴</option></select></label>
     </div>
   </div>
 </div>
@@ -516,7 +516,7 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
     <div id="roomOnlineStatus" class="room-online-status loading"><span class="online-dot"></span><b>서버 연결 확인 중...</b><small id="roomOnlineDetail">방 정보를 불러오는 중입니다.</small></div>
     <div class="room-code-box"><span>방 코드</span><b id="roomCode">------</b><button id="copyCode">코드 복사</button></div>
     <div id="roomSlots" class="room-slots"></div>
-    <div class="ready-actions"><button id="readyRoom">준비</button><button class="start-room" id="startRoom">친구를 기다리는 중...</button></div>
+    <div class="ready-actions"><button id="readyRoom">준비</button><button class="start-room" id="startRoom" style="display:none">게임 시작</button></div>
     <div class="waiting-chat card">
       <h3>방 채팅</h3>
       <div id="waitChatMessages" class="chat-messages"></div>
@@ -579,7 +579,7 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
       <label>자동플레이 <select id="aiAuto"><option value="true">허용</option><option value="false">사용 불가</option></select></label>
       <label>배속 <select id="aiSpeedAllow"><option value="true">허용</option><option value="false">1배속 고정</option></select></label>
       <label>더블 확률 <select id="aiDouble"><option value="1">기본</option><option value="1.5">높음</option><option value="2">매우 높음</option></select></label>
-      <label>황금열쇠 확률 <select id="aiKey"><option value="1">기본</option><option value="1.5">높음</option><option value="2">매우 높음</option></select></label><label>턴 제한 <select id="aiTurnLimit"><option value="0">제한 없음</option><option value="30">30턴</option><option value="50" selected>50턴</option><option value="100">100턴</option></select></label>
+      <label>황금열쇠 확률 <select id="aiKey"><option value="1">기본</option><option value="1.5">높음</option><option value="2">매우 높음</option></select></label><label>턴 제한 <select id="aiTurnLimit"><option value="0" selected>제한 없음</option><option value="30">30턴</option><option value="50">50턴</option><option value="100">100턴</option></select></label>
     </div>
   </div>
 </div>
@@ -660,8 +660,8 @@ let data=[];function mk(){
  }
 })();
 
-let P=[],turn=0,rolled=false,dbl=false,over=false,gameCount=4,gameMode='ai',autoPlay=false,gameSpeed=2;let turnLimit=50,turnsLeft=50;
-let gameSettings={initialMoney:2200000,allowAuto:true,allowSpeed:true,doubleBoost:1,keyBoost:1,turnLimit:50,isPublic:false};
+let P=[],turn=0,rolled=false,dbl=false,over=false,gameCount=4,gameMode='ai',autoPlay=false,gameSpeed=2;let turnLimit=0,turnsLeft=0;
+let gameSettings={initialMoney:2200000,allowAuto:true,allowSpeed:true,doubleBoost:1,keyBoost:1,turnLimit:0,isPublic:false};
 function normalizeBoardData(){
  data.forEach((t,i)=>{
   if(!t)return;
@@ -1437,7 +1437,7 @@ function showLandInfo(){
 }
 function modal(h,b){document.getElementById('mh').textContent=h;document.getElementById('mb').textContent=b;let a=document.getElementById('ma');a.innerHTML='';let q=document.createElement('button');q.textContent='새 게임';q.onclick=()=>{document.getElementById('modal').classList.remove('show');reset()};a.appendChild(q);document.getElementById('modal').classList.add('show')}
 function reset(){window._resultShown=false;window._historySaved=false;
- const ci=document.getElementById('chatInput');if(ci)ci.value='';turnLimit=Number.isFinite(Number(gameSettings.turnLimit))?Number(gameSettings.turnLimit):50;turnsLeft=turnLimit;P=PN.slice(0,gameCount).map((n,i)=>({name:n,money:Number(gameSettings.initialMoney)||2200000,pos:0,jail:0,dead:false,laps:0,items:[],stats:{tollIncome:0,tollPaid:0,purchase:0,build:0,keys:0}}));data.forEach(t=>{t.owner=-1;t.bld=0;t.purchasedLap=-1});turn=0;rolled=false;dbl=false;over=false;document.getElementById('log').innerHTML='';status('주사위를 굴려 시작하세요.');log('게임 시작 — 40칸 월드 투어');ui()}
+ const ci=document.getElementById('chatInput');if(ci)ci.value='';turnLimit=Number.isFinite(Number(gameSettings.turnLimit))?Number(gameSettings.turnLimit):0;turnsLeft=turnLimit;P=PN.slice(0,gameCount).map((n,i)=>({name:n,money:Number(gameSettings.initialMoney)||2200000,pos:0,jail:0,dead:false,laps:0,items:[],stats:{tollIncome:0,tollPaid:0,purchase:0,build:0,keys:0}}));data.forEach(t=>{t.owner=-1;t.bld=0;t.purchasedLap=-1});turn=0;rolled=false;dbl=false;over=false;document.getElementById('log').innerHTML='';status('주사위를 굴려 시작하세요.');log('게임 시작 — 40칸 월드 투어');ui()}
 
 
 function setRoomConnectionState(kind,title,detail=''){
@@ -1942,13 +1942,23 @@ const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=
      }
    }
    const readyBtn=document.getElementById('readyRoom'),meEntry=room.players?.[onlinePlayerId];
-   if(readyBtn){readyBtn.classList.toggle('ready',!!meEntry?.ready);readyBtn.textContent=meEntry?.ready?'준비 완료 ✓':'준비';}
-   const start=document.getElementById('startRoom');
+   const host=room.host===onlinePlayerId;
+   const full=entries.length===Number(room.maxPlayers||2);
+   const allReady=full&&entries.every(([,p])=>p.ready===true);
+   if(readyBtn){
+     readyBtn.disabled=room.status!=='waiting';
+     readyBtn.classList.toggle('ready',!!meEntry?.ready);
+     readyBtn.textContent=meEntry?.ready?'준비 취소 ✓':'준비';
+   }
+   const start=document.getElementById('startRoom'),readyActions=document.querySelector('.ready-actions');
    if(start){
-     const host=room.host===onlinePlayerId,full=entries.length===Number(room.maxPlayers||2),allReady=full&&entries.every(([,p])=>p.ready);
-     start.disabled=!host||!allReady;
-     start.classList.toggle('ready',host&&allReady);
-     start.textContent=host?(allReady?'게임 시작':`전원 준비 대기 (${entries.filter(([,p])=>p.ready).length}/${room.maxPlayers})`):'방장이 시작하기를 기다리는 중...';
+     // 방장에게만, 전원이 준비했을 때만 시작 버튼 자체가 나타난다.
+     const canStart=host&&allReady&&room.status==='waiting';
+     start.style.display=canStart?'':'none';
+     start.disabled=!canStart;
+     start.classList.toggle('ready',canStart);
+     start.textContent='게임 시작';
+     readyActions?.classList.toggle('all-ready',canStart);
    }
    if(room.status==='playing'){
      
@@ -1986,7 +1996,7 @@ async function restoreOnlineRoom(){
  if(room.status==='waiting'&&!room.players?.[id]){
   const count=Object.keys(room.players||{}).length;
   if(count>=Number(room.maxPlayers||2)){localStorage.removeItem('wtOnlineRoom');return}
-  await rtdb.ref(`rooms/${code}/players/${id}`).set({name:myNick()||onlineName(),uid:stableUid(),online:true,joinedAt:firebase.database.ServerValue.TIMESTAMP});
+  await rtdb.ref(`rooms/${code}/players/${id}`).set({name:myNick()||onlineName(),uid:stableUid(),online:true,ready:false,joinedAt:firebase.database.ServerValue.TIMESTAMP});
  }
  onlinePlayerId=id;onlineRoomCode=code;
  screen(room.status==='playing'?'gameApp':'waitingRoom');
@@ -2034,7 +2044,7 @@ function applyRemoteGame(g,room){
  gameCount=arr.length;
  P=g.players.map((p,i)=>({...p,name:(arr[i]&&arr[i][1].name)||p.name||`플레이어 ${i+1}`}));
  if(Array.isArray(g.lands))g.lands.forEach((x,i)=>{if(data[i]&&x){data[i].owner=x.owner;data[i].bld=x.bld;data[i].purchasedLap=x.purchasedLap}});
- turn=Number(g.turn)||0;rolled=!!g.rolled;dbl=!!g.dbl;over=!!g.over;turnLimit=Number.isFinite(Number(g.turnLimit))?Number(g.turnLimit):(Number.isFinite(Number(g.settings?.turnLimit))?Number(g.settings.turnLimit):50);turnsLeft=Number.isFinite(Number(g.turnsLeft))?Number(g.turnsLeft):turnLimit;window._rollDestination=Number.isInteger(g.destination)?g.destination:null;
+ turn=Number(g.turn)||0;rolled=!!g.rolled;dbl=!!g.dbl;over=!!g.over;turnLimit=Number.isFinite(Number(g.turnLimit))?Number(g.turnLimit):(Number.isFinite(Number(g.settings?.turnLimit))?Number(g.settings.turnLimit):0);turnsLeft=Number.isFinite(Number(g.turnsLeft))?Number(g.turnsLeft):turnLimit;window._rollDestination=Number.isInteger(g.destination)?g.destination:null;
  if(g.message!=null)document.getElementById('status').textContent=g.message;
  players();draw();renderMyItems();applyOnlineTurn(room);
  applyingRemoteGame=false;
@@ -2154,7 +2164,7 @@ async function startOnlineGame(){
    room.game={
     players:arr.map(([id,p])=>({name:p.name||'플레이어',money,pos:0,jail:0,dead:false,laps:0,items:[],stats:{tollIncome:0,tollPaid:0,purchase:0,build:0,keys:0}})),
     lands:data.map(()=>({owner:-1,bld:0,purchasedLap:-1})),
-    turn:Math.floor(Math.random()*arr.length),rolled:false,dbl:false,over:false,turnLimit:Number.isFinite(Number(settings.turnLimit))?Number(settings.turnLimit):50,turnsLeft:Number.isFinite(Number(settings.turnLimit))?Number(settings.turnLimit):50,diceState:{a:1,b:1,rolling:false},
+    turn:Math.floor(Math.random()*arr.length),rolled:false,dbl:false,over:false,turnLimit:Number.isFinite(Number(settings.turnLimit))?Number(settings.turnLimit):0,turnsLeft:Number.isFinite(Number(settings.turnLimit))?Number(settings.turnLimit):0,diceState:{a:1,b:1,rolling:false},
     message:'주사위를 굴려 시작하세요.',settings,updatedAt:Date.now()
    };
    return room;
@@ -2188,6 +2198,20 @@ window.addEventListener('load',()=>{
  const to=document.getElementById('tabOnlineUsers');if(to)to.onclick=()=>{friendMode='online';setFriendTab();renderFriendList()};
  // 새로고침해도 같은 탭의 방 참가 상태를 유지한다.
  setTimeout(async()=>{const resumed=await resumeOnlineGame();if(!resumed)restoreOnlineRoom().catch(()=>{})},120);
+ const ready=document.getElementById('readyRoom');
+ if(ready)ready.addEventListener('click',async e=>{
+   e.preventDefault();e.stopImmediatePropagation();
+   if(!onlineRoomCode)return;
+   if(ready.dataset.busy==='1')return;
+   ready.dataset.busy='1';
+   try{
+     await toggleReady();
+   }catch(err){
+     alert('준비 상태 변경 실패: '+err.message);
+   }finally{
+     ready.dataset.busy='0';
+   }
+ });
  const wb=document.getElementById('waitingBack');if(wb)wb.onclick=leaveOnlineRoom;
  const oldRoom=document.getElementById('openRoom');
  if(oldRoom) oldRoom.onclick=()=>screen('roomSetup');
@@ -2200,6 +2224,7 @@ window.addEventListener('load',()=>{
     allowSpeed:document.getElementById('setSpeed')?.value!=='false',
     doubleBoost:Number(document.getElementById('setDouble')?.value)||1,
     keyBoost:Number(document.getElementById('setKey')?.value)||1,
+    turnLimit:Number(document.getElementById('setTurnLimit')?.value ?? 0),
     isPublic:document.getElementById('setPublic')?.value==='true'
    }},{capture:true,once:true});
    btn.addEventListener('click',async e=>{
@@ -2276,6 +2301,7 @@ window.addEventListener('load',()=>{
      const count=Object.keys(room.players||{}).length;
      if(room.host!==onlinePlayerId)return alert('방장만 게임을 시작할 수 있습니다.');
      if(count!==Number(room.maxPlayers||2))return alert(`인원이 맞지 않습니다. (${count}/${room.maxPlayers||2})`);
+     if(!Object.values(room.players||{}).every(p=>p.ready===true))return alert('모든 플레이어가 준비해야 시작할 수 있습니다.');
      if(start.dataset.busy==='1')return;start.dataset.busy='1';
      await startOnlineGame();
      start.dataset.busy='0';
