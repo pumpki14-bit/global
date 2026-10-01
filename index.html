@@ -511,7 +511,7 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
 </div>
 <div id="waitingRoom" class="lobby-screen hidden">
   <div class="lobby-shell small">
-    <button class="backbtn" id="waitingBack">← 나가기</button>
+    <button class="backbtn" id="waitingBack">← 방 나가기</button>
     <div class="lobby-brand compact"><h1>대기방</h1><p id="roomCountText"></p></div>
     <div id="roomOnlineStatus" class="room-online-status loading"><span class="online-dot"></span><b>서버 연결 확인 중...</b><small id="roomOnlineDetail">방 정보를 불러오는 중입니다.</small></div>
     <div class="room-code-box"><span>방 코드</span><b id="roomCode">------</b><button id="copyCode">코드 복사</button></div>
@@ -1822,6 +1822,8 @@ function watchFriendRequests(){
 
 async function toggleReady(){
  if(!onlineRoomCode||!onlinePlayerId)return;
+ const roomSnap=await rtdb.ref(`rooms/${onlineRoomCode}`).once('value'),room=roomSnap.val();
+ if(!room||room.host===onlinePlayerId)return;
  const ref=rtdb.ref(`rooms/${onlineRoomCode}/players/${onlinePlayerId}/ready`);
  const v=(await ref.once('value')).val();await ref.set(!v);
 }
@@ -1944,21 +1946,24 @@ const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=
    const readyBtn=document.getElementById('readyRoom'),meEntry=room.players?.[onlinePlayerId];
    const host=room.host===onlinePlayerId;
    const full=entries.length===Number(room.maxPlayers||2);
-   const allReady=full&&entries.every(([,p])=>p.ready===true);
+   const guests=entries.filter(([id])=>id!==room.host);
+   const allGuestsReady=full&&guests.length>0&&guests.every(([,p])=>p.ready===true);
    if(readyBtn){
-     readyBtn.disabled=room.status!=='waiting';
-     readyBtn.classList.toggle('ready',!!meEntry?.ready);
+     // 방장은 준비를 누르지 않는다. 참가자만 준비/취소 가능.
+     readyBtn.style.display=host?'none':'';
+     readyBtn.disabled=host||room.status!=='waiting';
+     readyBtn.classList.toggle('ready',!host&&!!meEntry?.ready);
      readyBtn.textContent=meEntry?.ready?'준비 취소 ✓':'준비';
    }
    const start=document.getElementById('startRoom'),readyActions=document.querySelector('.ready-actions');
    if(start){
-     // 방장에게만, 전원이 준비했을 때만 시작 버튼 자체가 나타난다.
-     const canStart=host&&allReady&&room.status==='waiting';
+     // 정원이 찼고 모든 팀원이 준비하면 방장에게만 시작 버튼 표시.
+     const canStart=host&&allGuestsReady&&room.status==='waiting';
      start.style.display=canStart?'':'none';
      start.disabled=!canStart;
      start.classList.toggle('ready',canStart);
      start.textContent='게임 시작';
-     readyActions?.classList.toggle('all-ready',canStart);
+     readyActions?.classList.toggle('all-ready',canStart&&!host);
    }
    if(room.status==='playing'){
      
@@ -1984,7 +1989,7 @@ async function leaveOnlineRoom(){
   const snap=await rtdb.ref('rooms/'+code).once('value'),room=snap.val();
   if(room){await transferHostIfNeeded(code,room,id);await rtdb.ref(`rooms/${code}/players/${id}`).remove();}
  }
- localStorage.removeItem('wtOnlineRoom');localStorage.removeItem('wtOnlineRole');onlineRoomCode=null;screen('lobby');
+ localStorage.removeItem('wtOnlineRoom');localStorage.removeItem('wtOnlineRole');onlineRoomCode=null;clearOnlineResume();localStorage.removeItem('wtOnlineRoom');localStorage.removeItem('wtOnlineRole');screen('lobby');
 }
 async function restoreOnlineRoom(){
  const code=localStorage.getItem('wtOnlineRoom');if(!code)return;
@@ -2154,7 +2159,7 @@ async function startOnlineGame(){
    if(!room||room.host!==onlinePlayerId||room.status!=='waiting')return;
    const joined=Object.entries(room.players||{}).sort((a,b)=>(a[1]?.joinedAt||0)-(b[1]?.joinedAt||0));
    const max=Number(room.maxPlayers||2);
-   if(joined.length!==max||!joined.every(([,p])=>p.ready))return;
+   if(joined.length!==max||!joined.filter(([id])=>id!==room.host).every(([,p])=>p.ready===true))return;
    const arr=shuffleArray(joined),order=arr.map(x=>x[0]);
    const settings={...gameSettings,...(room.settings||{})};
    const money=Number(settings.initialMoney)||2200000;
@@ -2197,7 +2202,7 @@ window.addEventListener('load',()=>{
  const tm=document.getElementById('tabMyFriends');if(tm)tm.onclick=()=>{friendMode='friends';setFriendTab();renderFriendList()};
  const to=document.getElementById('tabOnlineUsers');if(to)to.onclick=()=>{friendMode='online';setFriendTab();renderFriendList()};
  // 새로고침해도 같은 탭의 방 참가 상태를 유지한다.
- setTimeout(async()=>{const resumed=await resumeOnlineGame();if(!resumed)restoreOnlineRoom().catch(()=>{})},120);
+ 
  const ready=document.getElementById('readyRoom');
  if(ready)ready.addEventListener('click',async e=>{
    e.preventDefault();e.stopImmediatePropagation();
@@ -2301,7 +2306,7 @@ window.addEventListener('load',()=>{
      const count=Object.keys(room.players||{}).length;
      if(room.host!==onlinePlayerId)return alert('방장만 게임을 시작할 수 있습니다.');
      if(count!==Number(room.maxPlayers||2))return alert(`인원이 맞지 않습니다. (${count}/${room.maxPlayers||2})`);
-     if(!Object.values(room.players||{}).every(p=>p.ready===true))return alert('모든 플레이어가 준비해야 시작할 수 있습니다.');
+     if(!Object.entries(room.players||{}).filter(([id])=>id!==room.host).every(([,p])=>p.ready===true))return alert('모든 팀원이 준비해야 시작할 수 있습니다.');
      if(start.dataset.busy==='1')return;start.dataset.busy='1';
      await startOnlineGame();
      start.dataset.busy='0';
@@ -2430,5 +2435,10 @@ function bindChatOnce(){
  bind('chatSend','chatInput','game');bind('waitChatSend','waitChatInput','wait');
 }
 window.addEventListener('load',bindChatOnce,{once:true});
+
+document.addEventListener('DOMContentLoaded',()=>{
+ // 사이트를 새로 열면 항상 첫 화면부터 시작한다.
+ setTimeout(()=>screen('lobby'),0);
+});
 </script>
 </body></html>
