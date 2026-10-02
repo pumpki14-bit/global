@@ -527,7 +527,19 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
 }
 
 .token.me-token{display:flex!important;align-items:center!important;justify-content:center!important;font-size:7px!important;font-weight:1000!important;line-height:1!important;color:#fff!important;text-shadow:0 1px 2px #000,0 0 2px #000!important;letter-spacing:-.3px!important}
-</style></head>
+</style>
+<style>
+.key-guide{max-height:min(68vh,620px);overflow-y:auto;text-align:left;padding-right:5px}
+.key-guide-note{position:sticky;top:0;z-index:2;background:#101d2b;padding:8px;border:1px solid #2a4155;border-radius:8px;margin-bottom:8px}
+.key-card-row{border:1px solid #2a4155;background:#132334;border-radius:9px;padding:9px;margin:7px 0}
+.key-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:900}
+.key-card-prob{white-space:nowrap;color:#ffd76a}
+.key-card-desc{font-size:11px;color:#b9cad7;line-height:1.5;margin-top:5px}
+.key-test-btn{margin-top:7px;width:100%;background:#6b4c10;border-color:#b98a24}
+.key-guide-foot{font-size:10px;color:#8fa4b4;margin-top:9px}
+</style>
+
+</head>
 <body>
 <div id="lobby" class="lobby-screen">
   <div class="lobby-shell">
@@ -552,10 +564,10 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
     <div class="room-options">
       <label>방 공개 <select id="setPublic"><option value="true">공개방</option><option value="false">비공개방</option></select></label>
       <label>초기 자금 <input id="setMoney" type="number" min="100000" step="10000" value="2200000"></label>
-      <label>자동플레이 <select id="setAuto"><option value="true">허용</option><option value="false">사용 불가</option></select></label>
-      <label>배속 <select id="setSpeed"><option value="true">허용</option><option value="false">1배속 고정</option></select></label>
+      <label>자동플레이 <select id="setAuto"><option value="false" selected>사용 불가</option><option value="true">허용</option></select></label>
+      <label>배속 <select id="setSpeed"><option value="false" selected>1배속 고정</option><option value="true">허용</option></select></label>
       <label>더블 확률 <select id="setDouble"><option value="1">기본</option><option value="1.5">높음</option><option value="2">매우 높음</option></select></label>
-      <label>황금열쇠 확률 <select id="setKey"><option value="1">기본</option><option value="1.5">높음</option><option value="2">매우 높음</option></select></label><label>턴 제한 <select id="setTurnLimit"><option value="0" selected>제한 없음</option><option value="30">30턴</option><option value="50">50턴</option><option value="100">100턴</option></select></label>
+      <label>황금열쇠 확률 <select id="setKey"><option value="1">기본</option><option value="1.5">높음</option><option value="2">매우 높음</option></select></label><label>치트 모드 <select id="setCheat"><option value="false" selected>비활성화</option><option value="true">활성화</option></select></label><label>턴 제한 <select id="setTurnLimit"><option value="0" selected>제한 없음</option><option value="30">30턴</option><option value="50">50턴</option><option value="100">100턴</option></select></label>
     </div>
   </div>
 </div>
@@ -580,7 +592,13 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
     <div id="roomOnlineStatus" class="room-online-status loading"><span class="online-dot"></span><b>서버 연결 확인 중...</b><small id="roomOnlineDetail">방 정보를 불러오는 중입니다.</small></div>
     <div class="room-code-box"><span>방 코드</span><b id="roomCode">------</b><button id="copyCode">코드 복사</button></div>
     <div id="roomSlots" class="room-slots"></div><div id="teamSeatBoard" class="team-seat-board" style="display:none"></div>
-    <div class="ready-actions"><button id="readyRoom">준비</button><button class="start-room" id="startRoom" style="display:none">게임 시작</button></div>
+    <div class="ready-actions"><div id="onlineCheatLobbyBox" style="margin:8px 0;padding:9px 10px;border:1px solid #40505c;border-radius:10px;background:#14212b">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+    <div><b>🧪 치트 모드</b><div style="font-size:10px;opacity:.72;margin-top:2px">황금열쇠 카드 테스트 기능</div></div>
+    <button id="onlineCheatLobbyToggle" type="button">비활성화</button>
+  </div>
+</div>
+<button id="readyRoom">준비</button><button class="start-room" id="startRoom" style="display:none">게임 시작</button></div>
     <div class="waiting-chat card">
       <h3>방 채팅</h3>
       <div id="waitChatMessages" class="chat-messages"></div>
@@ -649,7 +667,7 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
 </div>
 <div id="gameApp" class="hidden"><div class="wrap"><div class="top"><div><b>🌍 WORLD TOUR</b><div style="font-size:11px;color:#91a8ba">세계 도시를 사고 건설하는 40칸 보드게임</div></div><div class="top-actions"><button id="gameRoomCode" class="room-code-game" style="display:none">방 ------</button><span id="turnLimitBadge" class="turn-limit-badge">남은 턴 50</span><button id="comfortSettings">⚙️ 편의설정</button><button id="keyInfo" class="key-info-btn">🔑 황금열쇠</button><button id="exitGame" class="exit-game">게임 나가기</button></div></div><div class="game"><div class="board" id="board"><div class="center"><div style="font-size:11px;color:#78bfe8;font-weight:900;letter-spacing:2px;margin-bottom:6px">WORLD TOUR</div><div class="turn" id="turn"></div><div id="turnOrder" class="turn-order"></div><div class="dice" id="dice">⚀ ⚀</div><div class="status" id="status"></div><div class="actions"><button class="primary" id="roll">🎲 굴리기</button><button id="buy" style="display:none">증서 구매</button><button id="end">턴 종료</button><button id="myLandQuick">내 땅</button><button id="landInfo">땅 정보</button><button id="sellLand">땅 매각</button><button id="autoPlay" class="auto-btn">▶ 자동플레이</button>
 <select id="gameSpeed" class="speed-select" aria-label="게임 속도">
-<option value="1">1배속</option><option value="2">2배속</option><option value="3">3배속</option><option value="4">4배속</option><option value="10">10배속</option>
+<option value="1" selected>1배속</option><option value="2">2배속</option><option value="3">3배속</option><option value="4">4배속</option><option value="10">10배속</option>
 </select></div></div></div><div class="side"><div class="card"><h3>플레이어</h3><div id="players"></div></div><div class="card"><h3>📊 자산 현황</h3><div id="assetSummary"></div></div><div class="card"><h3>증서 정보</h3><div id="info" style="font-size:11px;color:#a9bac7">도시를 눌러 확인</div></div><div class="card inventory-card"><h3>내 황금열쇠 아이템</h3><div id="myItems" class="item-list"><span class="muted">보유 아이템 없음</span></div></div>
 <div class="card chatcard"><h3>채팅</h3><div id="chatMessages" class="chat-messages"></div><div class="chat-send"><input id="chatInput" maxlength="80" placeholder="메시지"><button id="chatSend">전송</button></div></div>
 <div id="log" style="display:none"></div></div></div></div></div><div class="modal" id="modal"><div class="box"><h2 id="mh"></h2><p id="mb"></p><div class="actions" id="ma"></div></div></div>
@@ -724,8 +742,8 @@ let data=[];function mk(){
  }
 })();
 
-let P=[],turn=0,rolled=false,dbl=false,over=false,gameCount=4,gameMode='ai',autoPlay=false,gameSpeed=2;let turnLimit=0,turnsLeft=0,roundTurnsDone=0;
-let gameSettings={initialMoney:2200000,allowAuto:true,allowSpeed:true,doubleBoost:1,keyBoost:1,turnLimit:0,isPublic:false};
+let P=[],turn=0,rolled=false,dbl=false,over=false,gameCount=4,gameMode='ai',autoPlay=false,gameSpeed=1;let onlineCheatEnabled=false;let turnLimit=0,turnsLeft=0,roundTurnsDone=0;
+let gameSettings={initialMoney:2200000,allowAuto:false,allowSpeed:false,cheatEnabled:false,doubleBoost:1,keyBoost:1,turnLimit:0,isPublic:false};
 function normalizeBoardData(){
  data.forEach((t,i)=>{
   if(!t)return;
@@ -774,14 +792,16 @@ function animateTokenStep(playerIndex,oldPos,newPos){
  const a=oldTile.getBoundingClientRect(),b=newTile.getBoundingClientRect();
  const dx=(a.left+a.width/2)-(b.left+b.width/2),dy=(a.top+a.height/2)-(b.top+b.height/2);
  token.classList.add('step-move');
- const anim=token.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:'translate(0,0)'}],{duration:210,easing:'cubic-bezier(.22,.7,.25,1)',fill:'both'});
+ const anim=token.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:'translate(0,0)'}],{duration:125,easing:'cubic-bezier(.22,.7,.25,1)',fill:'both'});
  return anim.finished.catch(()=>{});
 }
 
 function rent(t){
- if(t.type==='SPECIAL')return t.rents[0];
- if(t.type==='CITY')return t.rents[t.bld]||0;
- return t.price;
+ let base=0;
+ if(t.type==='SPECIAL')base=t.rents[0];
+ else if(t.type==='CITY')base=t.rents[t.bld]||0;
+ else base=t.price;
+ return Math.max(0,Math.floor(base*(Number.isFinite(t.rentFactor)?t.rentFactor:1)));
 }
 function cost(t,l){return (t.buildCosts&&t.buildCosts[l])||0}
 
@@ -1007,7 +1027,7 @@ function renderMyItems(){
  if(!items.length){box.innerHTML='<span class="muted">보유 아이템 없음</span>';return}
  box.innerHTML='';
  items.forEach((it,idx)=>{
-  const b=document.createElement('button');b.className='item-btn';b.textContent=it==='TOLL_PASS'?'🎫 통행료 면제권':it;
+  const b=document.createElement('button');b.className='item-btn';b.textContent=it==='TOLL_PASS'?'🎫 통행료 면제권':it==='FREE_LAND'?'🏝️ 무료 토지 매입권':it;
   const mine=me===turn&&!over&&!actionLocked&&!rollLock&&!p.dead;
   b.disabled=!mine;
   b.onclick=()=>useOwnedItem(idx);
@@ -1018,8 +1038,37 @@ async function useOwnedItem(idx){
  const me=localGameIndex(),p=P[me];
  if(!p||me!==turn||over||actionLocked||rollLock)return gameNotice('내 턴에만 사용할 수 있습니다.',1300);
  const item=p.items?.[idx];if(!item)return;
- // 면제권은 통행료를 내야 하는 순간에 자동 사용 선택을 위해 보유만 한다.
- if(item==='TOLL_PASS')gameNotice('🎫 면제권은 상대 땅 통행료를 낼 때 사용할 수 있습니다.',1700);
+ // 면제권은 통행료를 내야 하는 순간에 사용한다.
+ if(item==='TOLL_PASS')return gameNotice('🎫 면제권은 상대 땅 통행료를 낼 때 사용할 수 있습니다.',1700);
+ if(item==='FREE_LAND')return useFreeLandItem(idx);
+}
+function useFreeLandItem(idx){
+ const me=localGameIndex(),p=P[me];
+ const targets=data.filter(t=>(t.type==='CITY'||t.type==='SPECIAL')&&t.owner<0);
+ if(!targets.length)return gameNotice('🏝️ 현재 무료로 매입할 수 있는 땅이 없습니다.',1700);
+ document.getElementById('mh').textContent='🏝️ 무료 토지 매입권';
+ document.getElementById('mb').innerHTML=
+   '<div style="font-size:11px;color:#a9bac7;margin-bottom:8px">원하는 빈 땅 하나를 선택하세요. 토지 가격은 0원이며 건물은 포함되지 않습니다.</div>'+
+   '<div id="freeLandScroll" style="max-height:min(52vh,430px);overflow-y:auto;-webkit-overflow-scrolling:touch;padding-right:4px"></div>';
+ const list=document.getElementById('freeLandScroll');
+ targets.forEach(t=>{
+   const b=document.createElement('button');
+   b.style.cssText='display:block;width:100%;margin:6px 0;text-align:left;padding:10px 12px';
+   b.innerHTML=`<b>🏝️ ${escapeHtml(t.name)}</b><br><span style="font-size:10px;opacity:.8">정상가 ${won(t.price)} → 무료</span>`;
+   b.onclick=async()=>{
+     t.owner=me;t.purchasedLap=p.laps;
+     p.items.splice(idx,1);
+     closeGameModal();
+     gameNotice(`🏝️ ${t.name} 무료 매입 완료 · ${won(t.price)} 절약`,2200);
+     log(`${p.name} 무료 토지 매입권 사용 → ${t.name} (${won(t.price)} 무료)`);
+     renderMyItems();ui();
+     if(gameMode==='friend')await pushOnlineGame({itemEvent:{type:'FREE_LAND',name:p.name,land:t.name,at:Date.now()}});
+   };
+   list.appendChild(b);
+ });
+ const a=document.getElementById('ma');a.innerHTML='';
+ const no=document.createElement('button');no.textContent='취소';no.onclick=()=>closeGameModal();a.appendChild(no);
+ openGameModal(true);
 }
 function hasTollPass(p){return Array.isArray(p?.items)&&p.items.includes('TOLL_PASS')}
 function consumeTollPass(p){const i=p?.items?.indexOf('TOLL_PASS')??-1;if(i>=0){p.items.splice(i,1);return true}return false}
@@ -1067,11 +1116,19 @@ function consumeTurn(){
  return false;
 }
 
-function showKeyReveal(playerName,card){
+function showKeyReveal(playerName,card,detail=''){
  document.querySelector('.key-reveal')?.remove();
  const o=document.createElement('div');o.className='key-reveal';
- o.innerHTML=`<div class="key-card-big"><div class="key-icon">🔑</div><b>황금열쇠</b><small>${escapeHtml(playerName)} · ${escapeHtml(card)}</small></div>`;
- document.body.appendChild(o);setTimeout(()=>o.remove(),1900);
+ o.innerHTML=`<div class="key-card-big"><div class="key-icon">🔑</div><b>황금열쇠</b><small>${escapeHtml(playerName)} · ${escapeHtml(card)}</small><div id="keyRevealDetail" style="margin-top:8px;font-size:11px;line-height:1.55;color:#ffe7a6;max-width:260px">${escapeHtml(detail)}</div></div>`;
+ document.body.appendChild(o);
+ clearTimeout(window._keyRevealTimer);
+ window._keyRevealTimer=setTimeout(()=>o.remove(),1000);
+}
+function keyResult(text){
+ const el=document.getElementById('keyRevealDetail');
+ if(el)el.innerHTML=escapeHtml(text).replace(/\n/g,'<br>');
+ clearTimeout(window._keyRevealTimer);
+ window._keyRevealTimer=setTimeout(()=>document.querySelector('.key-reveal')?.remove(),1000);
 }
 function recordGameHistory(){
  try{
@@ -1216,6 +1273,106 @@ else if(gameMode==='ai'&&turn&&!over){
  }
 else scheduleAutoEnd();
 }
+
+
+function weightedPick(rows){
+ let r=Math.random()*rows.reduce((a,x)=>a+x[1],0);
+ for(const x of rows){r-=x[1];if(r<0)return x[0]}
+ return rows[rows.length-1][0];
+}
+function ownedLandBreakdown(owner,perLand){
+ const lands=data.filter(x=>x.owner===owner);
+ return {lands,total:lands.length*perLand,text:lands.length?lands.map(x=>`${x.name} ${won(perLand)}`).join(' + '):'보유 땅 없음'};
+}
+
+const GOLDEN_CARDS=[
+ {id:'travel',icon:'🚀',name:'세계여행',prob:5,desc:'원하는 지역을 직접 선택해 즉시 이동합니다.',run:async p=>offerWorldTravel(true)},
+ {id:'random',icon:'🌀',name:'랜덤 여행',prob:6,desc:'전체 보드 중 한 곳으로 무작위 이동합니다.',run:async p=>{p.pos=Math.floor(Math.random()*40);draw();await land()}},
+ {id:'start',icon:'🏁',name:'출발지 이동',prob:5,desc:'출발지로 즉시 이동하고 20만원을 받습니다.',run:async p=>{p.pos=0;p.money+=200000;draw()}},
+ {id:'back',icon:'⏪',name:'후진 여행',prob:5,desc:'현재 위치에서 3칸 뒤로 이동합니다.',run:async p=>{p.pos=(p.pos+37)%40;draw();await land()}},
+ {id:'fast',icon:'⚡',name:'초고속 여행',prob:5,desc:'현재 위치에서 6칸 앞으로 이동합니다.',run:async p=>{p.pos=(p.pos+6)%40;draw();await land()}},
+ {id:'again',icon:'🎲',name:'한 번 더!',prob:5,desc:'현재 턴에서 주사위를 한 번 더 굴릴 수 있습니다.',run:async p=>{dbl=true}},
+ {id:'choose',icon:'🎯',name:'숫자 선택',prob:4,desc:'1~6 중 이동할 칸 수를 직접 선택합니다.',run:async p=>chooseGoldenMove(p)},
+  {id:'support',icon:'💰',name:'관광 지원금',prob:28,desc:'은행에서 30만원을 즉시 받습니다.',run:async p=>{p.money+=300000;keyResult('관광 지원금 +30만원')}},
+ {id:'prize',icon:'🎁',name:'행운의 상금',prob:7,desc:'현재 보유 현금의 20~100%를 추가로 받습니다. 높은 보너스일수록 당첨 확률이 낮습니다. (20% 35% / 40% 25% / 60% 20% / 80% 12% / 100% 8%)',run:async p=>{const pct=weightedPick([[20,35],[40,25],[60,20],[80,12],[100,8]]);const before=Math.max(0,p.money);const gain=Math.floor(before*pct/100);p.money+=gain;keyResult(`행운의 상금 ${pct}% 당첨!
+보유 현금 ${won(before)} × ${pct}% = +${won(gain)}`);gameNotice(`🎁 행운의 상금 ${pct}% · +${won(gain)}`,2200)}},
+ {id:'jackpot',icon:'💎',name:'황금 잭팟',prob:2,desc:'희귀 카드. 100만원을 즉시 받습니다.',run:async p=>{p.money+=1000000;keyResult('황금 잭팟 당첨!\n+100만원')}},
+
+ {id:'refund',icon:'🧾',name:'세금 환급',prob:6,desc:'은행에서 15만원을 돌려받습니다.',run:async p=>{p.money+=150000}},
+  {id:'tax',icon:'💸',name:'재산세',prob:6,desc:'보유한 땅 1곳마다 5만원을 냅니다. 카드 아래에 과세된 지역과 총 납부액이 표시됩니다.',run:async p=>{const x=ownedLandBreakdown(turn,50000);p.money-=x.total;keyResult(`재산세
+${x.text}
+총 납부: ${won(x.total)}`);gameNotice(`💸 재산세 총 ${won(x.total)}`,2200)}},
+ {id:'invest',icon:'🏦',name:'투자 수익',prob:5,desc:'보유한 땅 1곳마다 5만원을 받습니다. 카드 아래에 지역별 수익과 총액이 표시됩니다.',run:async p=>{const x=ownedLandBreakdown(turn,50000);p.money+=x.total;keyResult(`투자 수익
+${x.text}
+총 수익: +${won(x.total)}`);gameNotice(`🏦 투자 수익 +${won(x.total)}`,2200)}},
+
+ {id:'freebuild',icon:'🏗️',name:'무료 건설',prob:6,desc:'즉시 발동. 내가 가진 땅을 직접 고른 뒤 원하는 건물 종류를 선택해 비용 없이 건설합니다.',run:async p=>goldenFreeBuild()},
+ {id:'wreck',icon:'💥',name:'건물 철거',prob:5,desc:'내가 보유한 건물이 있는 지역 하나가 무작위로 선택되어 그 지역의 건물이 완전히 사라집니다. 땅 소유권은 유지됩니다.',run:async p=>{const a=data.filter(x=>x.owner===turn&&x.bld>0);if(!a.length)return gameNotice('철거할 내 건물이 없습니다.',1500);const t=a[Math.floor(Math.random()*a.length)];t.bld=0;gameNotice(`💥 ${t.name}의 건물이 철거되었습니다.`,1800)}},
+ {id:'precision',icon:'💣',name:'정밀 철거',prob:2,desc:'희귀 카드. 상대가 소유한 땅은 건물 유무와 관계없이 선택할 수 있습니다. 선택한 땅의 소유권이 제거되며 건물이 있다면 건물도 함께 사라져 빈 땅으로 돌아갑니다.',run:async p=>goldenPrecisionDemolition()},
+  {id:'tourdown',icon:'📉',name:'관광객 감소',prob:4,desc:'내 지역 하나의 통행료가 10~30% 영구 감소합니다. 큰 감소율일수록 발생 확률이 낮습니다. (10% 40% / 15% 25% / 20% 18% / 25% 11% / 30% 6%)',run:async p=>{const a=data.filter(x=>x.owner===turn&&(x.type==='CITY'||x.type==='SPECIAL'));if(!a.length){keyResult('보유 지역이 없어 효과 없음');return}const t=a[Math.floor(Math.random()*a.length)];const pct=weightedPick([[10,40],[15,25],[20,18],[25,11],[30,6]]);const before=rent(t);t.rentFactor=(Number.isFinite(t.rentFactor)?t.rentFactor:1)*(1-pct/100);const after=rent(t);keyResult(`${t.name} 관광객 ${pct}% 감소
+통행료 ${won(before)} → ${won(after)}
+감소액 ${won(before-after)}`);gameNotice(`📉 ${t.name} 통행료 ${pct}% 감소`,2200)}},
+
+ {id:'fate',icon:'🎰',name:'운명의 열쇠',prob:4,desc:'50% 확률로 +40만원, 아니면 -20만원이 적용됩니다.',run:async p=>{if(Math.random()<.5){p.money+=400000;gameNotice('🎰 행운! +40만원',1500)}else{p.money-=200000;gameNotice('🎰 아쉽다! -20만원',1500)}}},
+  {id:'sale',icon:'🏚️',name:'긴급 매각',prob:2,desc:'현재 가치가 가장 높은 내 땅을 은행에 강제로 매각합니다. 카드 아래에 매각 지역과 받은 금액이 표시됩니다.',run:async p=>{const a=data.filter(x=>x.owner===turn);if(!a.length){keyResult('매각할 땅이 없어 효과 없음');return}a.sort((x,y)=>saleValue(y)-saleValue(x));const t=a[0],v=saleValue(t);p.money+=v;t.owner=-1;t.bld=0;t.purchasedLap=-1;t.rentFactor=1;keyResult(`강제 매각: ${t.name}
+매각대금: +${won(v)}`);gameNotice(`🏚️ ${t.name} 강제 매각 · +${won(v)}`,2200)}},
+ {id:'pass',icon:'🛂',name:'무료 통행권',prob:3,desc:'보관형 아이템. 상대 지역 통행료를 1회 면제합니다. 무료 토지 매입권과 별개의 아이템입니다.',run:async p=>{p.items=p.items||[];p.items.push('TOLL_PASS');keyResult('🎫 무료 통행권 ×1 보관함에 저장')}},
+ {id:'freeland',icon:'🏝️',name:'무료 토지 매입권',prob:4,desc:'보관형 아이템. 보관함에서 사용하면 현재 은행 소유인 땅 중 원하는 곳 하나를 직접 골라 0원에 매입합니다. 건물은 포함되지 않습니다.',run:async p=>{p.items=p.items||[];p.items.push('FREE_LAND');keyResult('🏝️ 무료 토지 매입권 ×1 보관함에 저장')}}
+];
+
+function pickGoldenCard(){
+ let r=Math.random()*100;
+ for(const c of GOLDEN_CARDS){r-=c.prob;if(r<0)return c}
+ return GOLDEN_CARDS[GOLDEN_CARDS.length-1];
+}
+async function runGoldenCard(c,testing=false){
+ const p=P[turn]; if(!p||!c)return;
+ if(!testing)ensureStats(p).keys++;
+ status(`🔑 ${c.icon} ${c.name}`);showKeyReveal(p.name,`${c.icon} ${c.name}`);
+ gameNotice(`🔑 ${p.name} · ${c.name}`,1800);log(`${p.name} 황금열쇠: ${c.name}${testing?' [테스트]':''}`);
+ await c.run(p);bankrupt(turn);ui();
+ if(gameMode==='friend'&&!testing)await pushOnlineGame({goldenKeyEvent:{name:p.name,card:c.name,at:Date.now()}});
+}
+function chooseGoldenMove(p){
+ return new Promise(resolve=>{
+  document.getElementById('mh').textContent='🎯 숫자 선택';
+  document.getElementById('mb').innerHTML='이동할 칸 수를 선택하세요.';
+  const a=document.getElementById('ma');a.innerHTML='';
+  for(let n=1;n<=6;n++){const b=document.createElement('button');b.textContent=n+'칸';b.onclick=async()=>{closeGameModal();p.pos=(p.pos+n)%40;draw();await land();resolve()};a.appendChild(b)}
+  openGameModal(true);
+ });
+}
+function goldenFreeBuild(){
+ return new Promise(resolve=>{
+  const own=data.filter(x=>x.type==='CITY'&&x.owner===turn);
+  if(!own.length){gameNotice('보유한 땅이 없어 무료 건설이 취소되었습니다.',1700);return resolve()}
+  document.getElementById('mh').textContent='🏗️ 무료 건설 · 지역 선택';
+  document.getElementById('mb').innerHTML='<div style="max-height:45vh;overflow:auto">건설할 내 지역을 선택하세요.</div>';
+  const a=document.getElementById('ma');a.innerHTML='';
+  own.forEach(t=>{const b=document.createElement('button');b.textContent=`${t.name} · 현재 ${['대지','별장 1채','별장 2채','빌딩','호텔'][t.bld]}`;b.onclick=()=>goldenFreeBuildType(t,resolve);a.appendChild(b)});
+  openGameModal(true);
+ });
+}
+function goldenFreeBuildType(t,resolve){
+ document.getElementById('mh').textContent=`🏗️ ${t.name} 무료 건설`;
+ document.getElementById('mb').innerHTML='원하는 건물을 선택하세요. 건설비는 0원입니다.';
+ const a=document.getElementById('ma');a.innerHTML='';
+ const opts=[['별장',1],['건물',2],['빌딩',3]];
+ opts.forEach(([name,lvl])=>{const b=document.createElement('button');b.textContent=name+' 무료 건설';b.onclick=()=>{t.bld=Math.max(t.bld,lvl);closeGameModal();gameNotice(`🏗️ ${t.name} · ${name} 무료 건설!`,1700);draw();ui();resolve()};a.appendChild(b)});
+ openGameModal(true);
+}
+function goldenPrecisionDemolition(){
+ return new Promise(resolve=>{
+  const targets=data.filter(x=>(x.type==='CITY'||x.type==='SPECIAL')&&x.owner>=0&&x.owner!==turn);
+  if(!targets.length){gameNotice('제거할 상대 소유 땅이 없습니다.',1700);return resolve()}
+  document.getElementById('mh').textContent='💣 정밀 철거 · 상대 땅 선택';
+  document.getElementById('mb').innerHTML='<div style="font-size:11px;color:#a9bac7">제거할 상대 땅을 선택하세요. 건물이 없어도 선택할 수 있으며, 건물이 있으면 건물까지 함께 사라집니다.</div>';
+  const a=document.getElementById('ma');a.innerHTML='';
+  targets.forEach(t=>{const b=document.createElement('button');b.textContent=`${P[t.owner]?.name||'상대'} · ${t.name} · ${t.bld>0?(['','별장 1채','별장 2채','빌딩','호텔'][t.bld]||'건물 보유'):'땅만 보유'}`;b.onclick=()=>{const oldOwner=P[t.owner]?.name||'상대';t.owner=-1;t.bld=0;t.purchasedLap=-1;t.rentFactor=1;closeGameModal();gameNotice(`💣 ${oldOwner}의 ${t.name} 완전 파괴! 땅까지 소멸`,1900);log(`정밀 철거 → ${oldOwner}의 ${t.name} 건물 및 소유권 제거`);draw();ui();resolve()};a.appendChild(b)});
+  openGameModal(true);
+ });
+}
+
 async function land(){let p=P[turn],t=data[p.pos];inspect(t);gameNotice(`📍 ${p.name} → ${t.name||'칸 도착'}`,900);if(p.dead){status(`${p.name}은(는) 파산 상태입니다.`);return}log(`${p.name} → ${t.name}`);if(t.type==='CITY'||t.type==='SPECIAL'){if(t.owner>=0&&t.owner!==turn){
  if(gameMode==='friend'&&isTeamRoom()&&sameTeam(turn,t.owner)){
    status(`팀원 ${P[t.owner].name}의 땅 · 통행료 면제`);gameNotice(`🤝 같은 팀 땅 · 통행료 면제`,1500);return;
@@ -1269,37 +1426,8 @@ async function land(){let p=P[turn],t=data[p.pos];inspect(t);gameNotice(`📍 ${
  return;
 }
 if(t.type==='KEY'){
- const cards=[
-  {n:'통행료 면제권 획득!',fn:async()=>{p.items=p.items||[];p.items.push('TOLL_PASS');gameNotice(`🎫 ${p.name} 통행료 면제권 획득`,1800)}},
-  {n:'은행 보너스 +20만원',fn:async()=>{p.money+=200000}},
-  {n:'행운 보너스 +50만원',fn:async()=>{p.money+=500000}},
-  {n:'황금 잭팟 +100만원!',fn:async()=>{p.money+=1000000}},
-  {n:'관광 지원금 +30만원',fn:async()=>{p.money+=300000}},
-  {n:'세금 환급 +15만원',fn:async()=>{p.money+=150000}},
-  {n:'관광세 -12만원',fn:async()=>{p.money-=120000}},
-  {n:'재산세 -20만원',fn:async()=>{p.money-=200000}},
-  {n:'여행 경비 -30만원',fn:async()=>{p.money-=300000}},
-  {n:'앞으로 3칸!',fn:async()=>{p.pos=(p.pos+3)%40;draw();await land()}},
-  {n:'앞으로 6칸!',fn:async()=>{p.pos=(p.pos+6)%40;draw();await land()}},
-  {n:'뒤로 3칸!',fn:async()=>{p.pos=(p.pos+37)%40;draw();await land()}},
-  {n:'출발점으로 이동 +20만원',fn:async()=>{p.pos=0;p.money+=200000;draw()}},
-  {n:'서울로 이동!',fn:async()=>{const q=data.find(x=>x.name==='서울');if(q){p.pos=q.i;draw();await land()}}},
-  {n:'도쿄로 이동!',fn:async()=>{const q=data.find(x=>x.name==='도쿄');if(q){p.pos=q.i;draw();await land()}}},
-  {n:'무인도로 이동!',fn:async()=>{const q=data.find(x=>x.type==='ISLAND');if(q){p.pos=q.i;draw();await land()}}},
-  {n:'무료 세계여행! 원하는 지역 아무 곳으로 이동',fn:async()=>{if(turn===onlinePlayerIndexFromCurrent()||gameMode!=='friend')setTimeout(()=>offerWorldTravel(true),120)}},
-  {n:'주사위 한 번 더!',fn:async()=>{dbl=true}},
-  {n:'모든 플레이어에게 5만원씩 받기',fn:async()=>{P.forEach((q,i)=>{if(i!==turn&&!q.dead){q.money-=50000;p.money+=50000}})}},
-  {n:'여행 축하금! 모든 플레이어가 5만원씩 받기',fn:async()=>{P.forEach(q=>{if(!q.dead)q.money+=50000})}},
-  {n:'도시 투자 보너스',fn:async()=>{const own=data.filter(x=>x.owner===turn);p.money+=own.length*50000}},
-  {n:'무료 건설권!',fn:async()=>{const own=data.filter(x=>x.type==='CITY'&&x.owner===turn&&x.bld<4);if(own.length){const q=own.sort((a,b)=>b.price-a.price)[0];q.bld++;gameNotice(`🏗️ ${q.name} 무료 업그레이드!`,1800)}else p.money+=150000}},
-  {n:'도시 정비 지원금 +25만원',fn:async()=>{p.money+=250000}},
-  {n:'행운의 반값 여행권 +10만원',fn:async()=>{p.money+=100000;p.items=p.items||[];p.items.push('TOLL_PASS')}},
-  {n:'운명의 열쇠!',fn:async()=>{const win=Math.random()<.5;if(win){p.money+=400000;gameNotice('🎰 행운! +40만원',1600)}else{p.money-=200000;gameNotice('🎰 아쉽다! -20만원',1600)}}}
- ];
- const c=cards[Math.floor(Math.random()*cards.length)];
- ensureStats(p).keys++;status('🔑 '+c.n);showKeyReveal(p.name,c.n);gameNotice(`🔑 ${p.name} · ${c.n}`,1800);log(p.name+' 황금열쇠: '+c.n);
- await c.fn();bankrupt(turn);
- if(gameMode==='friend')await pushOnlineGame({goldenKeyEvent:{name:p.name,card:c.n,at:Date.now()}});
+ const c=pickGoldenCard();
+ await runGoldenCard(c,false);
 }else if(t.type==='ISLAND'){
  p.jail=3;
  status('무인도! 다음 턴부터 더블로 탈출 · 최대 3턴');
@@ -1729,7 +1857,7 @@ function showLandInfo(){
 }
 function modal(h,b){document.getElementById('mh').textContent=h;document.getElementById('mb').textContent=b;let a=document.getElementById('ma');a.innerHTML='';let q=document.createElement('button');q.textContent='새 게임';q.onclick=()=>{document.getElementById('modal').classList.remove('show');reset()};a.appendChild(q);document.getElementById('modal').classList.add('show')}
 function reset(){window._resultShown=false;window._historySaved=false;window._victorySplashShown=false;window._lastUiTurn=-1;
- const ci=document.getElementById('chatInput');if(ci)ci.value='';turnLimit=Number.isFinite(Number(gameSettings.turnLimit))?Number(gameSettings.turnLimit):0;turnsLeft=turnLimit;roundTurnsDone=0;P=PN.slice(0,gameCount).map((n,i)=>({name:n,money:Number(gameSettings.initialMoney)||2200000,pos:0,jail:0,dead:false,laps:0,items:[],stats:{tollIncome:0,tollPaid:0,purchase:0,build:0,keys:0}}));data.forEach(t=>{t.owner=-1;t.bld=0;t.purchasedLap=-1});turn=0;rolled=false;dbl=false;over=false;document.getElementById('log').innerHTML='';status('주사위를 굴려 시작하세요.');log('게임 시작 — 40칸 월드 투어');ui()}
+ const ci=document.getElementById('chatInput');if(ci)ci.value='';turnLimit=Number.isFinite(Number(gameSettings.turnLimit))?Number(gameSettings.turnLimit):0;turnsLeft=turnLimit;roundTurnsDone=0;P=PN.slice(0,gameCount).map((n,i)=>({name:n,money:Number(gameSettings.initialMoney)||2200000,pos:0,jail:0,dead:false,laps:0,items:[],stats:{tollIncome:0,tollPaid:0,purchase:0,build:0,keys:0}}));data.forEach(t=>{t.owner=-1;t.bld=0;t.purchasedLap=-1;t.rentFactor=1});turn=0;rolled=false;dbl=false;over=false;document.getElementById('log').innerHTML='';status('주사위를 굴려 시작하세요.');log('게임 시작 — 40칸 월드 투어');ui()}
 
 
 function setRoomConnectionState(kind,title,detail=''){
@@ -1783,7 +1911,7 @@ async function resumeOnlineGame(){
    rtdb.ref(`rooms/${code}/players/${pid}`).onDisconnect().update({online:false,lastSeen:firebase.database.ServerValue.TIMESTAMP});
    watchOnlineRoom(code);watchChat(code);
    if(room.status==='playing'&&room.game){
-     gameMode='friend';gameCount=orderedOnlinePlayers(room).length;
+     gameMode='friend';onlineCheatEnabled=!!gameSettings.cheatEnabled;autoPlay=false;gameSpeed=1;gameCount=orderedOnlinePlayers(room).length;
      screen('gameApp');document.body.classList.add('friend-online');applyRemoteGame(room.game,room);
      gameNotice('↻ 온라인 게임에 다시 연결되었습니다.',1400);
    }else{
@@ -1821,6 +1949,7 @@ document.querySelectorAll('#roomSetup .count-btn').forEach(b=>b.onclick=()=>{
   initialMoney:Number(document.getElementById('setMoney')?.value)||2200000,
   allowAuto:document.getElementById('setAuto')?.value!=='false',
   allowSpeed:document.getElementById('setSpeed')?.value!=='false',
+  cheatEnabled:document.getElementById('setCheat')?.value==='true',
   doubleBoost:Number(document.getElementById('setDouble')?.value)||1,
   keyBoost:Number(document.getElementById('setKey')?.value)||1,
   isPublic:document.getElementById('setPublic')?.value==='true',turnLimit:Number(document.getElementById('setTurnLimit')?.value)||0
@@ -1849,7 +1978,7 @@ document.querySelectorAll('.ai-count').forEach(b=>b.onclick=()=>{
   turnLimit:Number(document.getElementById('aiTurnLimit')?.value)||0,
   isPublic:false
  };
- gameMode='ai';gameCount=+b.dataset.count;autoPlay=false;gameSpeed=2;screen('gameApp');reset();
+ gameMode='ai';gameCount=+b.dataset.count;autoPlay=false;gameSpeed=1;screen('gameApp');reset();
  // 사람은 항상 0번 인덱스. 시작 차례만 랜덤으로 정한다.
  turn=Math.floor(Math.random()*gameCount);status('주사위를 굴리세요.');ui();updateAutoControls();
  if(turn!==0)setTimeout(()=>ai(),350);
@@ -1876,32 +2005,38 @@ function exitAIGame(){
  document.getElementById('modal').classList.add('show');
 }
 
-document.getElementById('keyInfo').onclick=()=>{
- document.getElementById('mh').textContent='🔑 황금열쇠 안내';
- document.getElementById('mb').innerHTML=`
-  <div class="key-guide">
-   <div class="key-guide-note">황금열쇠 칸에 도착하면 카드 1장을 뽑습니다.</div>
-   <div class="key-guide-title">⚡ 즉시 실행 카드</div>
-   <div class="key-guide-list">
-    <span>💰 돈 받기</span><span>💸 돈 지불</span><span>➡️ 앞으로 3칸</span>
-    <span>↩️ 뒤로 3칸</span><span>🏝️ 무인도로 이동</span><span>🇰🇷 서울로 이동</span>
-    <span>🌍 무료 세계여행</span><span>🎲 주사위 한 번 더</span><span>🏠 가장 비싼 땅 매각</span>
-    <span>🏁 출발점으로 이동</span><span>💵 다른 플레이어에게 돈 받기</span><span>🎁 다른 플레이어에게 돈 주기</span>
-    <span>🧾 재산세</span><span>🛠️ 건물 유지비</span><span>💎 행운 보너스</span>
-   </div>
-   <div class="key-guide-title">🎒 보관 가능한 아이템</div>
-   <div class="key-guide-list">
-    <span>🏝️ 무인도 면제권</span><span>🛡️ 통행료 면제권</span><span>💸 통행료 반값권</span>
-    <span>🔨 건설비 50% 할인권</span><span>🏗️ 무료 건설권</span><span>🏦 토지 구매 할인권</span>
-    <span>💰 월급 2배권</span>
-   </div>
-   <div class="key-guide-foot">보관형 카드는 인벤토리에 저장되고 자기 턴 또는 해당 상황에서 사용할 수 있습니다.</div>
-  </div>`;
+document.getElementById('keyInfo').onclick=()=>openGoldenKeyGuide();
+
+function syncOnlineCheatLobby(){
+ const btn=document.getElementById('onlineCheatLobbyToggle');
+ if(!btn)return;
+ btn.textContent=onlineCheatEnabled?'활성화':'비활성화';
+ btn.onclick=()=>{
+   onlineCheatEnabled=!onlineCheatEnabled;
+   btn.textContent=onlineCheatEnabled?'활성화':'비활성화';
+   gameNotice(`🧪 치트 모드 ${onlineCheatEnabled?'활성화':'비활성화'}`,1200);
+ };
+}
+
+function openGoldenKeyGuide(){
+ document.getElementById('mh').textContent='🔑 황금열쇠 도감 · 확률표';
+ const total=GOLDEN_CARDS.reduce((a,c)=>a+c.prob,0);
+ const canTest=gameMode==='ai'||(gameMode==='friend'&&onlineCheatEnabled);
+ const cheatToggle=gameMode==='friend'?`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px;padding:9px;border:1px solid #465866;border-radius:10px;background:#14212b"><div><b>🧪 온라인 치트</b><div style="font-size:10px;opacity:.72;margin-top:2px">활성화하면 AI 대전처럼 황금열쇠 테스트 버튼을 사용할 수 있습니다.</div></div><button id="onlineCheatToggle">${onlineCheatEnabled?'활성화됨':'비활성화'}</button></div>`:'';
+ document.getElementById('mb').innerHTML=`<div class="key-guide">${cheatToggle}<div class="key-guide-note">카드별 실제 추첨 확률입니다. 총합 <b>${total}%</b>${gameMode==='ai'?' · AI 대전에서는 각 카드를 바로 테스트할 수 있습니다.':gameMode==='friend'?(onlineCheatEnabled?' · 온라인 치트 활성화 중':' · 온라인 치트는 기본 비활성화입니다.') :''}</div>`+
+ GOLDEN_CARDS.map(c=>`<div class="key-card-row"><div class="key-card-head"><span>${c.icon} ${c.name}</span><span class="key-card-prob">${c.prob}%</span></div><div class="key-card-desc">${c.desc}</div>${canTest?`<button class="key-test-btn" data-key-test="${c.id}">🧪 이 카드 테스트 사용</button>`:''}</div>`).join('')+
+ `<div class="key-guide-foot">정밀 철거와 무료 건설은 즉시 실행됩니다. 무료 통행권과 무료 토지 매입권은 서로 별개의 보관형 아이템입니다.</div></div>`;
  const a=document.getElementById('ma');a.innerHTML='';
- const ok=document.createElement('button');ok.textContent='확인';
- ok.onclick=()=>document.getElementById('modal').classList.remove('show');
- a.appendChild(ok);document.getElementById('modal').classList.add('show');
-};
+ const ok=document.createElement('button');ok.textContent='닫기';ok.onclick=()=>closeGameModal();a.appendChild(ok);
+ openGameModal(false);
+ const cheatBtn=document.getElementById('onlineCheatToggle');
+ if(cheatBtn)cheatBtn.onclick=()=>{onlineCheatEnabled=!onlineCheatEnabled;openGoldenKeyGuide()};
+ document.querySelectorAll('[data-key-test]').forEach(btn=>btn.onclick=async()=>{
+   const c=GOLDEN_CARDS.find(x=>x.id===btn.dataset.keyTest);
+   closeGameModal();await runGoldenCard(c,true);
+   if(gameMode==='friend'&&onlineRoomCode)await pushOnlineGame({cheatGoldenKey:{player:localGameIndex(),card:c.id,at:Date.now()}});
+ });
+}
 
 document.getElementById('exitGame').addEventListener('click',async e=>{
  if(gameMode==='friend'&&onlineRoomCode){
@@ -2224,7 +2359,7 @@ async function joinOnlineRoom(code){
  const ref=rtdb.ref('rooms/'+code),snap=await ref.once('value');
  if(!snap.exists())throw new Error('존재하지 않는 방입니다.');
  const room=snap.val(),players=room.players?Object.keys(room.players):[];
- if(room.settings)gameSettings={...gameSettings,...room.settings};
+ if(room.settings){gameSettings={...gameSettings,...room.settings};onlineCheatEnabled=!!gameSettings.cheatEnabled;}
  if(room.status!=='waiting')throw new Error('이미 시작된 방입니다.');
  if(players.length>=room.maxPlayers)throw new Error('방이 가득 찼습니다.');
  onlinePlayerId=makePlayerId();onlineRoomCode=code;
@@ -2243,13 +2378,13 @@ function watchOnlineRoom(code){
  onlineRoomListener=rtdb.ref('rooms/'+code).on('value',snap=>{
    if(!snap.exists()){setRoomConnectionState('error','방 연결 끊김','방이 삭제되었거나 존재하지 않습니다.');localStorage.removeItem('wtOnlineRoom');screen('lobby');return}
    
-const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=room;renderRematchStatus(room);if(room.status==='playing'&&room.rematch)returnRoomToRematch(room).catch(()=>{});if(room.countdownAt&&room.countdownAt>Number(sessionStorage.getItem('wtCountdownSeen')||0)){sessionStorage.setItem('wtCountdownSeen',room.countdownAt);runStartCountdown();}
+const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=room;if(room.settings){gameSettings={...gameSettings,...room.settings};onlineCheatEnabled=!!gameSettings.cheatEnabled;}renderRematchStatus(room);if(room.status==='playing'&&room.rematch)returnRoomToRematch(room).catch(()=>{});if(room.countdownAt&&room.countdownAt>Number(sessionStorage.getItem('wtCountdownSeen')||0)){sessionStorage.setItem('wtCountdownSeen',room.countdownAt);runStartCountdown();}
    setRoomConnectionState('online','● 게임 온라인',`방 ${code} · 참가자 ${entries.length}/${Number(room.maxPlayers||2)}명 · 실시간 연결됨`);
 
    const isMember=!!room.players?.[onlinePlayerId]||!!room.playerSnapshot?.[onlinePlayerId];
    if(!isMember)return;
    if(room.status==='playing'&&room.game){
-     gameMode='friend';gameCount=Array.isArray(room.playerOrder)?room.playerOrder.length:room.game.players?.length||entries.length;
+     gameMode='friend';autoPlay=false;gameSpeed=1;gameCount=Array.isArray(room.playerOrder)?room.playerOrder.length:room.game.players?.length||entries.length;
      screen('gameApp');document.body.classList.add('friend-online');
    }else if(room.status==='waiting'){
      screen('waitingRoom');watchChat(code);
@@ -2335,7 +2470,7 @@ const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=
    if(room.status==='playing'){
      
      if(!room.players?.[onlinePlayerId]&&!room.playerSnapshot?.[onlinePlayerId])return
-     gameMode='friend';gameCount=Array.isArray(room.playerOrder)?room.playerOrder.length:entries.length;
+     gameMode='friend';autoPlay=false;gameSpeed=1;gameCount=Array.isArray(room.playerOrder)?room.playerOrder.length:entries.length;
      if(!chatListener)watchChat(code);
      screen('gameApp');document.body.classList.add('friend-online')
      if(room.game){
@@ -2385,7 +2520,7 @@ function onlinePlayerIndex(room,id=onlinePlayerId){
 function packOnlineGame(extra={}){
  return {
   players:P.map(p=>({name:p.name,money:p.money,pos:p.pos,jail:p.jail,dead:!!p.dead,laps:p.laps||0,items:Array.isArray(p.items)?p.items:[],stats:ensureStats(p)})),
-  lands:data.map(t=>({owner:t.owner,bld:t.bld,purchasedLap:t.purchasedLap})),
+  lands:data.map(t=>({owner:t.owner,bld:t.bld,purchasedLap:t.purchasedLap,rentFactor:Number.isFinite(t.rentFactor)?t.rentFactor:1})),
   turn,rolled:!!rolled,dbl:!!dbl,over:!!over,turnLimit,turnsLeft,roundTurnsDone,
   diceState:window.currentDiceState||{a:1,b:1,rolling:false},
   destination:Number.isInteger(window._rollDestination)?window._rollDestination:null,
@@ -2541,7 +2676,7 @@ async function startOnlineGame(){
    room.startedAt=Date.now();
    room.game={
     players:arr.map(([id,p])=>({name:p.name||'플레이어',money,pos:0,jail:0,dead:false,laps:0,items:[],stats:{tollIncome:0,tollPaid:0,purchase:0,build:0,keys:0}})),
-    lands:data.map(()=>({owner:-1,bld:0,purchasedLap:-1})),
+    lands:data.map(()=>({owner:-1,bld:0,purchasedLap:-1,rentFactor:1})),
     turn:Math.floor(Math.random()*arr.length),rolled:false,dbl:false,over:false,turnLimit:Number.isFinite(Number(settings.turnLimit))?Number(settings.turnLimit):0,turnsLeft:Number.isFinite(Number(settings.turnLimit))?Number(settings.turnLimit):0,roundTurnsDone:0,diceState:{a:1,b:1,rolling:false},
     message:'주사위를 굴려 시작하세요.',settings,updatedAt:Date.now()
    };
@@ -2605,6 +2740,7 @@ window.addEventListener('load',()=>{
     initialMoney:Number(document.getElementById('setMoney')?.value)||2200000,
     allowAuto:document.getElementById('setAuto')?.value!=='false',
     allowSpeed:document.getElementById('setSpeed')?.value!=='false',
+    cheatEnabled:document.getElementById('setCheat')?.value==='true',
     doubleBoost:Number(document.getElementById('setDouble')?.value)||1,
     keyBoost:Number(document.getElementById('setKey')?.value)||1,
     turnLimit:Number(document.getElementById('setTurnLimit')?.value ?? 0),
@@ -2840,7 +2976,7 @@ function bindChatOnce(){
  };
  bind('chatSend','chatInput','game');bind('waitChatSend','waitChatInput','wait');
 }
-window.addEventListener('load',bindChatOnce,{once:true});
+window.addEventListener('load',()=>{bindChatOnce();syncOnlineCheatLobby();},{once:true});
 
 document.addEventListener('DOMContentLoaded',()=>{
  // 사이트를 새로 열면 항상 첫 화면부터 시작한다.
@@ -2910,5 +3046,7 @@ document.addEventListener('focusout',e=>{
    setTimeout(()=>{rememberStableViewport();fitGameToViewport()},320);
  }
 });
+
+document.addEventListener('DOMContentLoaded',()=>syncOnlineCheatLobby());
 </script>
 </body></html>
