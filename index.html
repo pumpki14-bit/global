@@ -539,6 +539,37 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
 .key-guide-foot{font-size:10px;color:#8fa4b4;margin-top:9px}
 </style>
 
+
+<style id="rematchV96Style">
+.rematch-vote-wrap{margin:12px 0 8px;padding:11px;border:1px solid #405565;border-radius:12px;background:#101d27}
+.rematch-dots{display:flex;gap:7px;justify-content:center;margin:8px 0}
+.rematch-dot{width:17px;height:17px;border-radius:50%;background:#394955;border:2px solid #71818c;box-shadow:inset 0 0 0 2px #17232c}
+.rematch-dot.yes{background:#24d66f;border-color:#74f6a8;box-shadow:0 0 8px rgba(36,214,111,.65)}
+.rematch-dot.no{background:#e55353;border-color:#ff9494}
+.rematch-vote-text{text-align:center;font-size:11px;opacity:.85}
+.rematch-actions{display:flex;gap:7px}.rematch-actions button{flex:1}
+#resumeOnlineBtn{margin-top:10px}
+</style>
+
+<style id="turnIndicatorV97">
+/* 온라인 턴 표시는 상단 전체 배너가 아니라 보드 중앙의 작은 표시만 사용 */
+#turnBanner{
+ position:absolute!important;
+ top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;
+ transform:translate(-50%,-50%)!important;
+ width:auto!important;max-width:150px!important;
+ min-height:0!important;
+ padding:5px 9px!important;margin:0!important;
+ border-radius:999px!important;
+ font-size:11px!important;line-height:1.15!important;
+ z-index:12!important;
+ pointer-events:none!important;
+ opacity:.88!important;
+ white-space:nowrap!important;
+ box-shadow:0 2px 8px rgba(0,0,0,.28)!important;
+}
+#turnBanner.hidden{display:none!important}
+</style>
 </head>
 <body>
 <div id="lobby" class="lobby-screen">
@@ -592,12 +623,7 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
     <div id="roomOnlineStatus" class="room-online-status loading"><span class="online-dot"></span><b>서버 연결 확인 중...</b><small id="roomOnlineDetail">방 정보를 불러오는 중입니다.</small></div>
     <div class="room-code-box"><span>방 코드</span><b id="roomCode">------</b><button id="copyCode">코드 복사</button></div>
     <div id="roomSlots" class="room-slots"></div><div id="teamSeatBoard" class="team-seat-board" style="display:none"></div>
-    <div class="ready-actions"><div id="onlineCheatLobbyBox" style="margin:8px 0;padding:9px 10px;border:1px solid #40505c;border-radius:10px;background:#14212b">
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-    <div><b>🧪 치트 모드</b><div style="font-size:10px;opacity:.72;margin-top:2px">황금열쇠 카드 테스트 기능</div></div>
-    <button id="onlineCheatLobbyToggle" type="button">비활성화</button>
-  </div>
-</div>
+    <div class="ready-actions">
 <button id="readyRoom">준비</button><button class="start-room" id="startRoom" style="display:none">게임 시작</button></div>
     <div class="waiting-chat card">
       <h3>방 채팅</h3>
@@ -1286,37 +1312,37 @@ function ownedLandBreakdown(owner,perLand){
 }
 
 const GOLDEN_CARDS=[
- {id:'travel',icon:'🚀',name:'세계여행',prob:5,desc:'원하는 지역을 직접 선택해 즉시 이동합니다.',run:async p=>offerWorldTravel(true)},
- {id:'random',icon:'🌀',name:'랜덤 여행',prob:6,desc:'전체 보드 중 한 곳으로 무작위 이동합니다.',run:async p=>{p.pos=Math.floor(Math.random()*40);draw();await land()}},
- {id:'start',icon:'🏁',name:'출발지 이동',prob:5,desc:'출발지로 즉시 이동하고 20만원을 받습니다.',run:async p=>{p.pos=0;p.money+=200000;draw()}},
- {id:'back',icon:'⏪',name:'후진 여행',prob:5,desc:'현재 위치에서 3칸 뒤로 이동합니다.',run:async p=>{p.pos=(p.pos+37)%40;draw();await land()}},
- {id:'fast',icon:'⚡',name:'초고속 여행',prob:5,desc:'현재 위치에서 6칸 앞으로 이동합니다.',run:async p=>{p.pos=(p.pos+6)%40;draw();await land()}},
- {id:'again',icon:'🎲',name:'한 번 더!',prob:5,desc:'현재 턴에서 주사위를 한 번 더 굴릴 수 있습니다.',run:async p=>{dbl=true}},
- {id:'choose',icon:'🎯',name:'숫자 선택',prob:4,desc:'1~6 중 이동할 칸 수를 직접 선택합니다.',run:async p=>chooseGoldenMove(p)},
-  {id:'support',icon:'💰',name:'관광 지원금',prob:28,desc:'은행에서 30만원을 즉시 받습니다.',run:async p=>{p.money+=300000;keyResult('관광 지원금 +30만원')}},
- {id:'prize',icon:'🎁',name:'행운의 상금',prob:7,desc:'현재 보유 현금의 20~100%를 추가로 받습니다. 높은 보너스일수록 당첨 확률이 낮습니다. (20% 35% / 40% 25% / 60% 20% / 80% 12% / 100% 8%)',run:async p=>{const pct=weightedPick([[20,35],[40,25],[60,20],[80,12],[100,8]]);const before=Math.max(0,p.money);const gain=Math.floor(before*pct/100);p.money+=gain;keyResult(`행운의 상금 ${pct}% 당첨!
+ {id:'travel',icon:'🚀',name:'세계여행',prob:7,desc:'원하는 지역을 직접 선택해 즉시 이동합니다.',run:async p=>offerWorldTravel(true)},
+ {id:'random',icon:'🌀',name:'랜덤 여행',prob:7,desc:'전체 보드 중 한 곳으로 무작위 이동합니다.',run:async p=>{p.pos=Math.floor(Math.random()*40);draw();await land()}},
+ {id:'start',icon:'🏁',name:'출발지 이동',prob:5,desc:'출발지로 즉시 이동하고 20만원을 받습니다.',run:async p=>{p.pos=0;p.money+=200000;draw();keyResult('출발지 이동\n+20만원')}},
+ {id:'back',icon:'⏪',name:'후진 여행',prob:6,desc:'현재 위치에서 3칸 뒤로 이동합니다.',run:async p=>{p.pos=(p.pos+37)%40;draw();await land()}},
+ {id:'fast',icon:'⚡',name:'초고속 여행',prob:6,desc:'현재 위치에서 6칸 앞으로 이동합니다.',run:async p=>{p.pos=(p.pos+6)%40;draw();await land()}},
+ {id:'again',icon:'🎲',name:'한 번 더!',prob:6,desc:'현재 턴에서 주사위를 한 번 더 굴릴 수 있습니다.',run:async p=>{dbl=true}},
+ {id:'choose',icon:'🎯',name:'숫자 선택',prob:6,desc:'1~6 중 이동할 칸 수를 직접 선택합니다.',run:async p=>chooseGoldenMove(p)},
+  {id:'support',icon:'💰',name:'관광 지원금',prob:5,desc:'은행에서 30만원을 즉시 받습니다.',run:async p=>{p.money+=300000;keyResult('관광 지원금 +30만원')}},
+ {id:'prize',icon:'🎁',name:'행운의 상금',prob:4,desc:'현재 보유 현금의 20~100%를 추가로 받습니다. 높은 보너스일수록 당첨 확률이 낮습니다. (20% 35% / 40% 25% / 60% 20% / 80% 12% / 100% 8%)',run:async p=>{const pct=weightedPick([[20,35],[40,25],[60,20],[80,12],[100,8]]);const before=Math.max(0,p.money);const gain=Math.floor(before*pct/100);p.money+=gain;keyResult(`행운의 상금 ${pct}% 당첨!
 보유 현금 ${won(before)} × ${pct}% = +${won(gain)}`);gameNotice(`🎁 행운의 상금 ${pct}% · +${won(gain)}`,2200)}},
- {id:'jackpot',icon:'💎',name:'황금 잭팟',prob:2,desc:'희귀 카드. 100만원을 즉시 받습니다.',run:async p=>{p.money+=1000000;keyResult('황금 잭팟 당첨!\n+100만원')}},
+ {id:'jackpot',icon:'💎',name:'황금 잭팟',prob:1,desc:'희귀 카드. 100만원을 즉시 받습니다.',run:async p=>{p.money+=1000000;keyResult('황금 잭팟 당첨!\n+100만원')}},
 
- {id:'refund',icon:'🧾',name:'세금 환급',prob:6,desc:'은행에서 15만원을 돌려받습니다.',run:async p=>{p.money+=150000}},
-  {id:'tax',icon:'💸',name:'재산세',prob:6,desc:'보유한 땅 1곳마다 5만원을 냅니다. 카드 아래에 과세된 지역과 총 납부액이 표시됩니다.',run:async p=>{const x=ownedLandBreakdown(turn,50000);p.money-=x.total;keyResult(`재산세
+ {id:'refund',icon:'🧾',name:'세금 환급',prob:4,desc:'은행에서 15만원을 돌려받습니다. 카드 아래에 실제 환급액이 표시됩니다.',run:async p=>{p.money+=150000;keyResult('세금 환급\n+15만원');gameNotice('🧾 세금 환급 +15만원',1800)}},
+  {id:'tax',icon:'💸',name:'재산세',prob:5,desc:'보유한 땅 1곳마다 5만원을 냅니다. 카드 아래에 각 과세 지역의 5만원과 총 납부액이 표시됩니다.',run:async p=>{const x=ownedLandBreakdown(turn,50000);p.money-=x.total;keyResult(`재산세
 ${x.text}
 총 납부: ${won(x.total)}`);gameNotice(`💸 재산세 총 ${won(x.total)}`,2200)}},
- {id:'invest',icon:'🏦',name:'투자 수익',prob:5,desc:'보유한 땅 1곳마다 5만원을 받습니다. 카드 아래에 지역별 수익과 총액이 표시됩니다.',run:async p=>{const x=ownedLandBreakdown(turn,50000);p.money+=x.total;keyResult(`투자 수익
+ {id:'invest',icon:'🏦',name:'투자 수익',prob:4,desc:'보유한 땅 1곳마다 5만원을 받습니다. 카드 아래에 지역별 수익과 총액이 표시됩니다.',run:async p=>{const x=ownedLandBreakdown(turn,50000);p.money+=x.total;keyResult(`투자 수익
 ${x.text}
 총 수익: +${won(x.total)}`);gameNotice(`🏦 투자 수익 +${won(x.total)}`,2200)}},
 
  {id:'freebuild',icon:'🏗️',name:'무료 건설',prob:6,desc:'즉시 발동. 내가 가진 땅을 직접 고른 뒤 원하는 건물 종류를 선택해 비용 없이 건설합니다.',run:async p=>goldenFreeBuild()},
  {id:'wreck',icon:'💥',name:'건물 철거',prob:5,desc:'내가 보유한 건물이 있는 지역 하나가 무작위로 선택되어 그 지역의 건물이 완전히 사라집니다. 땅 소유권은 유지됩니다.',run:async p=>{const a=data.filter(x=>x.owner===turn&&x.bld>0);if(!a.length)return gameNotice('철거할 내 건물이 없습니다.',1500);const t=a[Math.floor(Math.random()*a.length)];t.bld=0;gameNotice(`💥 ${t.name}의 건물이 철거되었습니다.`,1800)}},
- {id:'precision',icon:'💣',name:'정밀 철거',prob:2,desc:'희귀 카드. 상대가 소유한 땅은 건물 유무와 관계없이 선택할 수 있습니다. 선택한 땅의 소유권이 제거되며 건물이 있다면 건물도 함께 사라져 빈 땅으로 돌아갑니다.',run:async p=>goldenPrecisionDemolition()},
-  {id:'tourdown',icon:'📉',name:'관광객 감소',prob:4,desc:'내 지역 하나의 통행료가 10~30% 영구 감소합니다. 큰 감소율일수록 발생 확률이 낮습니다. (10% 40% / 15% 25% / 20% 18% / 25% 11% / 30% 6%)',run:async p=>{const a=data.filter(x=>x.owner===turn&&(x.type==='CITY'||x.type==='SPECIAL'));if(!a.length){keyResult('보유 지역이 없어 효과 없음');return}const t=a[Math.floor(Math.random()*a.length)];const pct=weightedPick([[10,40],[15,25],[20,18],[25,11],[30,6]]);const before=rent(t);t.rentFactor=(Number.isFinite(t.rentFactor)?t.rentFactor:1)*(1-pct/100);const after=rent(t);keyResult(`${t.name} 관광객 ${pct}% 감소
+ {id:'precision',icon:'💣',name:'정밀 철거',prob:3,desc:'희귀 카드. 상대가 소유한 땅은 건물 유무와 관계없이 선택할 수 있습니다. 선택한 땅의 소유권이 제거되며 건물이 있다면 건물도 함께 사라져 빈 땅으로 돌아갑니다.',run:async p=>goldenPrecisionDemolition()},
+  {id:'tourdown',icon:'📉',name:'관광객 감소',prob:5,desc:'내 지역 하나의 통행료가 10~30% 영구 감소합니다. 큰 감소율일수록 발생 확률이 낮습니다. (10% 40% / 15% 25% / 20% 18% / 25% 11% / 30% 6%)',run:async p=>{const a=data.filter(x=>x.owner===turn&&(x.type==='CITY'||x.type==='SPECIAL'));if(!a.length){keyResult('보유 지역이 없어 효과 없음');return}const t=a[Math.floor(Math.random()*a.length)];const pct=weightedPick([[10,40],[15,25],[20,18],[25,11],[30,6]]);const before=rent(t);t.rentFactor=(Number.isFinite(t.rentFactor)?t.rentFactor:1)*(1-pct/100);const after=rent(t);keyResult(`${t.name} 관광객 ${pct}% 감소
 통행료 ${won(before)} → ${won(after)}
 감소액 ${won(before-after)}`);gameNotice(`📉 ${t.name} 통행료 ${pct}% 감소`,2200)}},
 
  {id:'fate',icon:'🎰',name:'운명의 열쇠',prob:4,desc:'50% 확률로 +40만원, 아니면 -20만원이 적용됩니다.',run:async p=>{if(Math.random()<.5){p.money+=400000;gameNotice('🎰 행운! +40만원',1500)}else{p.money-=200000;gameNotice('🎰 아쉽다! -20만원',1500)}}},
-  {id:'sale',icon:'🏚️',name:'긴급 매각',prob:2,desc:'현재 가치가 가장 높은 내 땅을 은행에 강제로 매각합니다. 카드 아래에 매각 지역과 받은 금액이 표시됩니다.',run:async p=>{const a=data.filter(x=>x.owner===turn);if(!a.length){keyResult('매각할 땅이 없어 효과 없음');return}a.sort((x,y)=>saleValue(y)-saleValue(x));const t=a[0],v=saleValue(t);p.money+=v;t.owner=-1;t.bld=0;t.purchasedLap=-1;t.rentFactor=1;keyResult(`강제 매각: ${t.name}
+  {id:'sale',icon:'🏚️',name:'긴급 매각',prob:3,desc:'현재 가치가 가장 높은 내 땅을 은행에 강제로 매각합니다. 카드 아래에 매각 지역과 받은 금액이 표시됩니다.',run:async p=>{const a=data.filter(x=>x.owner===turn);if(!a.length){keyResult('매각할 땅이 없어 효과 없음');return}a.sort((x,y)=>saleValue(y)-saleValue(x));const t=a[0],v=saleValue(t);p.money+=v;t.owner=-1;t.bld=0;t.purchasedLap=-1;t.rentFactor=1;keyResult(`강제 매각: ${t.name}
 매각대금: +${won(v)}`);gameNotice(`🏚️ ${t.name} 강제 매각 · +${won(v)}`,2200)}},
- {id:'pass',icon:'🛂',name:'무료 통행권',prob:3,desc:'보관형 아이템. 상대 지역 통행료를 1회 면제합니다. 무료 토지 매입권과 별개의 아이템입니다.',run:async p=>{p.items=p.items||[];p.items.push('TOLL_PASS');keyResult('🎫 무료 통행권 ×1 보관함에 저장')}},
+ {id:'pass',icon:'🛂',name:'무료 통행권',prob:4,desc:'보관형 아이템. 상대 지역 통행료를 1회 면제합니다. 무료 토지 매입권과 별개의 아이템입니다.',run:async p=>{p.items=p.items||[];p.items.push('TOLL_PASS');keyResult('🎫 무료 통행권 ×1 보관함에 저장')}},
  {id:'freeland',icon:'🏝️',name:'무료 토지 매입권',prob:4,desc:'보관형 아이템. 보관함에서 사용하면 현재 은행 소유인 땅 중 원하는 곳 하나를 직접 골라 0원에 매입합니다. 건물은 포함되지 않습니다.',run:async p=>{p.items=p.items||[];p.items.push('FREE_LAND');keyResult('🏝️ 무료 토지 매입권 ×1 보관함에 저장')}}
 ];
 
@@ -1643,27 +1669,43 @@ function propertyValueFor(i){
 
 async function requestRematch(){
  if(gameMode!=='friend'||!onlineRoomCode)return;
+ const room=latestOnlineRoom||{};
+ if(room.rematchRejected){gameNotice('❌ 누군가 재대결을 거절해 이번 게임은 다시 시작할 수 없습니다.',1800);return}
  await rtdb.ref(`rooms/${onlineRoomCode}/rematch/${onlinePlayerId}`).set({yes:true,at:firebase.database.ServerValue.TIMESTAMP});
- gameNotice('🔄 재대결 요청 완료',1200);
+ gameNotice('🔄 다시하기 수락',1000);
 }
-async function returnRoomToRematch(room){
- if(!onlineRoomCode||room.host!==onlinePlayerId)return;
+async function rejectRematch(){
+ if(gameMode!=='friend'||!onlineRoomCode)return;
+ await rtdb.ref(`rooms/${onlineRoomCode}`).update({
+   rematchRejected:true,
+   [`rematch/${onlinePlayerId}`]:{yes:false,no:true,at:firebase.database.ServerValue.TIMESTAMP}
+ });
+ gameNotice('❌ 재대결을 거절했습니다.',1200);
+}
+async function startAcceptedRematch(room){
+ if(!onlineRoomCode||room.host!==onlinePlayerId||room.rematchStarting)return;
  const members=Object.keys(room.playerSnapshot||room.players||{});
  const votes=room.rematch||{};
- if(members.length<2||!members.every(id=>votes[id]?.yes))return;
- const updates={status:'waiting',game:null,playerOrder:null,playerSnapshot:null,rematch:null,countdownAt:null,settings:room.settings||gameSettings};
- await rtdb.ref(`rooms/${onlineRoomCode}`).update(updates);
- for(const id of members){
-   const old=(room.players||{})[id]||(room.playerSnapshot||{})[id];
-   if(old)await rtdb.ref(`rooms/${onlineRoomCode}/players/${id}`).update({name:old.name||'플레이어',uid:old.uid||'',ready:false,online:old.online!==false,joinedAt:old.joinedAt||Date.now(),...(room.teamMode?{seat:old.seat}: {})});
- }
+ if(room.rematchRejected||members.length<2||!members.every(id=>votes[id]?.yes))return;
+ await rtdb.ref(`rooms/${onlineRoomCode}/rematchStarting`).set(true);
+ gameCount=members.length;reset();
+ const fresh=packOnlineGame();
+ await rtdb.ref(`rooms/${onlineRoomCode}`).update({
+   status:'playing',game:fresh,rematch:null,rematchRejected:null,rematchStarting:null,countdownAt:Date.now()
+ });
 }
 function renderRematchStatus(room){
- const el=document.getElementById('rematchStatus');if(!el)return;
+ const el=document.getElementById('rematchStatus'),dots=document.getElementById('rematchDots');
+ if(!el)return;
  const members=Object.keys(room?.playerSnapshot||room?.players||{});
- const yes=members.filter(id=>room?.rematch?.[id]?.yes).length;
- el.textContent=`재대결 동의 ${yes}/${members.length}`;
- const btn=document.getElementById('rematchBtn');if(btn)btn.disabled=!!room?.rematch?.[onlinePlayerId]?.yes;
+ const votes=room?.rematch||{};
+ const yes=members.filter(id=>votes[id]?.yes).length;
+ const rejected=!!room?.rematchRejected||members.some(id=>votes[id]?.no);
+ if(dots)dots.innerHTML=members.map(id=>`<span class="rematch-dot ${votes[id]?.yes?'yes':votes[id]?.no?'no':''}" title="${votes[id]?.yes?'수락':votes[id]?.no?'거절':'대기'}"></span>`).join('');
+ el.textContent=rejected?'❌ 재대결 거절됨 — 새 대결을 시작할 수 없습니다.':`재대결 수락 ${yes}/${members.length}`;
+ const yesBtn=document.getElementById('rematchBtn'),noBtn=document.getElementById('rematchRejectBtn');
+ if(yesBtn)yesBtn.disabled=rejected||!!votes[onlinePlayerId]?.yes||!!votes[onlinePlayerId]?.no;
+ if(noBtn)noBtn.disabled=rejected||!!votes[onlinePlayerId]?.yes||!!votes[onlinePlayerId]?.no;
 }
 
 function showGameResults(){
@@ -1687,8 +1729,11 @@ function showGameResults(){
    </div>`).join('')}</div>`;
  const a=document.getElementById('ma');a.innerHTML='';
  if(gameMode==='friend'&&onlineRoomCode){
-   const rem=document.createElement('button');rem.id='rematchBtn';rem.textContent='🔄 재대결';rem.onclick=requestRematch;a.appendChild(rem);
-   const rs=document.createElement('div');rs.id='rematchStatus';rs.className='rematch-status';a.appendChild(rs);
+   const box=document.createElement('div');box.className='rematch-vote-wrap';
+   box.innerHTML=`<div class="rematch-actions"><button id="rematchBtn">🔄 다시하기 수락</button><button id="rematchRejectBtn">✕ 거절</button></div><div id="rematchDots" class="rematch-dots"></div><div id="rematchStatus" class="rematch-vote-text"></div>`;
+   a.appendChild(box);
+   box.querySelector('#rematchBtn').onclick=requestRematch;
+   box.querySelector('#rematchRejectBtn').onclick=rejectRematch;
    renderRematchStatus(latestOnlineRoom);
  }
  const lobby=document.createElement('button');lobby.textContent='로비로';lobby.onclick=async()=>{
@@ -1855,7 +1900,7 @@ function showLandInfo(){
       </div>`;
  }));
 }
-function modal(h,b){document.getElementById('mh').textContent=h;document.getElementById('mb').textContent=b;let a=document.getElementById('ma');a.innerHTML='';let q=document.createElement('button');q.textContent='새 게임';q.onclick=()=>{document.getElementById('modal').classList.remove('show');reset()};a.appendChild(q);document.getElementById('modal').classList.add('show')}
+function modal(h,b){document.getElementById('mh').textContent=h;document.getElementById('mb').textContent=b;if(gameMode==='friend'&&onlineRoomCode){showGameResults();return}let a=document.getElementById('ma');a.innerHTML='';let q=document.createElement('button');q.textContent='새 게임';q.onclick=()=>{document.getElementById('modal').classList.remove('show');reset()};a.appendChild(q);document.getElementById('modal').classList.add('show')}
 function reset(){window._resultShown=false;window._historySaved=false;window._victorySplashShown=false;window._lastUiTurn=-1;
  const ci=document.getElementById('chatInput');if(ci)ci.value='';turnLimit=Number.isFinite(Number(gameSettings.turnLimit))?Number(gameSettings.turnLimit):0;turnsLeft=turnLimit;roundTurnsDone=0;P=PN.slice(0,gameCount).map((n,i)=>({name:n,money:Number(gameSettings.initialMoney)||2200000,pos:0,jail:0,dead:false,laps:0,items:[],stats:{tollIncome:0,tollPaid:0,purchase:0,build:0,keys:0}}));data.forEach(t=>{t.owner=-1;t.bld=0;t.purchasedLap=-1;t.rentFactor=1});turn=0;rolled=false;dbl=false;over=false;document.getElementById('log').innerHTML='';status('주사위를 굴려 시작하세요.');log('게임 시작 — 40칸 월드 투어');ui()}
 
@@ -1870,7 +1915,7 @@ function setRoomConnectionState(kind,title,detail=''){
 
 function screen(id){
  ['lobby','roomSetup','teamSetup','waitingRoom','joinRoom','publicLobby','friendLobby','spectateLobby','aiSetup','gameApp'].forEach(x=>document.getElementById(x).classList.add('hidden'));
- document.getElementById(id).classList.remove('hidden');
+ document.getElementById(id).classList.remove('hidden');if(id==='lobby')setTimeout(updateResumeButton,0);
  setTimeout(updateGameRoomCode,0);setTimeout(fitGameToViewport,40);
  if(id!=='gameApp'||!spectating){
    document.getElementById('gameApp')?.classList.remove('spectating');
@@ -1879,6 +1924,21 @@ function screen(id){
  }
 }
 
+
+function updateResumeButton(){
+ let btn=document.getElementById('resumeOnlineBtn');
+ const code=localStorage.getItem('wtResumeRoom')||localStorage.getItem('wtOnlineRoom');
+ const lobby=document.getElementById('lobby');
+ if(!lobby)return;
+ if(!btn){
+   btn=document.createElement('button');btn.id='resumeOnlineBtn';btn.className='big-btn';
+   btn.onclick=async()=>{btn.disabled=true;btn.textContent='↻ 재접속 중...';const ok=await resumeOnlineGame();if(!ok){btn.disabled=false;btn.textContent='↻ 진행 중인 게임 다시 들어가기';gameNotice('재접속할 게임을 찾지 못했습니다.',1400)}};
+   const target=lobby.querySelector('.lobby-actions,.menu,.buttons')||lobby;
+   target.appendChild(btn);
+ }
+ btn.style.display=code?'':'none';
+ if(code){btn.disabled=false;btn.textContent=`↻ 진행 중인 게임 다시 들어가기 (${code})`;}
+}
 function saveOnlineResume(code,role='player'){
  if(!code)return;
  localStorage.setItem('wtResumeRoom',code);
@@ -1918,7 +1978,7 @@ async function resumeOnlineGame(){
      screen('waitingRoom');
      setRoomConnectionState('online','● 게임 온라인',`방 ${code} · 재접속 완료`);
    }
-   return true;
+   await broadcastPresenceEvent('reconnected');return true;
  }catch(e){return false}
 }
 
@@ -2007,30 +2067,17 @@ function exitAIGame(){
 
 document.getElementById('keyInfo').onclick=()=>openGoldenKeyGuide();
 
-function syncOnlineCheatLobby(){
- const btn=document.getElementById('onlineCheatLobbyToggle');
- if(!btn)return;
- btn.textContent=onlineCheatEnabled?'활성화':'비활성화';
- btn.onclick=()=>{
-   onlineCheatEnabled=!onlineCheatEnabled;
-   btn.textContent=onlineCheatEnabled?'활성화':'비활성화';
-   gameNotice(`🧪 치트 모드 ${onlineCheatEnabled?'활성화':'비활성화'}`,1200);
- };
-}
 
 function openGoldenKeyGuide(){
  document.getElementById('mh').textContent='🔑 황금열쇠 도감 · 확률표';
  const total=GOLDEN_CARDS.reduce((a,c)=>a+c.prob,0);
  const canTest=gameMode==='ai'||(gameMode==='friend'&&onlineCheatEnabled);
- const cheatToggle=gameMode==='friend'?`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px;padding:9px;border:1px solid #465866;border-radius:10px;background:#14212b"><div><b>🧪 온라인 치트</b><div style="font-size:10px;opacity:.72;margin-top:2px">활성화하면 AI 대전처럼 황금열쇠 테스트 버튼을 사용할 수 있습니다.</div></div><button id="onlineCheatToggle">${onlineCheatEnabled?'활성화됨':'비활성화'}</button></div>`:'';
- document.getElementById('mb').innerHTML=`<div class="key-guide">${cheatToggle}<div class="key-guide-note">카드별 실제 추첨 확률입니다. 총합 <b>${total}%</b>${gameMode==='ai'?' · AI 대전에서는 각 카드를 바로 테스트할 수 있습니다.':gameMode==='friend'?(onlineCheatEnabled?' · 온라인 치트 활성화 중':' · 온라인 치트는 기본 비활성화입니다.') :''}</div>`+
+ document.getElementById('mb').innerHTML=`<div class="key-guide"><div class="key-guide-note">카드별 실제 추첨 확률입니다. 총합 <b>${total}%</b>${gameMode==='ai'?' · AI 대전에서는 각 카드를 바로 테스트할 수 있습니다.':gameMode==='friend'?(onlineCheatEnabled?' · 온라인 치트 활성화 중':' · 온라인 치트는 기본 비활성화입니다.') :''}</div>`+
  GOLDEN_CARDS.map(c=>`<div class="key-card-row"><div class="key-card-head"><span>${c.icon} ${c.name}</span><span class="key-card-prob">${c.prob}%</span></div><div class="key-card-desc">${c.desc}</div>${canTest?`<button class="key-test-btn" data-key-test="${c.id}">🧪 이 카드 테스트 사용</button>`:''}</div>`).join('')+
  `<div class="key-guide-foot">정밀 철거와 무료 건설은 즉시 실행됩니다. 무료 통행권과 무료 토지 매입권은 서로 별개의 보관형 아이템입니다.</div></div>`;
  const a=document.getElementById('ma');a.innerHTML='';
  const ok=document.createElement('button');ok.textContent='닫기';ok.onclick=()=>closeGameModal();a.appendChild(ok);
  openGameModal(false);
- const cheatBtn=document.getElementById('onlineCheatToggle');
- if(cheatBtn)cheatBtn.onclick=()=>{onlineCheatEnabled=!onlineCheatEnabled;openGoldenKeyGuide()};
  document.querySelectorAll('[data-key-test]').forEach(btn=>btn.onclick=async()=>{
    const c=GOLDEN_CARDS.find(x=>x.id===btn.dataset.keyTest);
    closeGameModal();await runGoldenCard(c,true);
@@ -2073,7 +2120,17 @@ function autoPlayTick(){
 
 document.getElementById('landInfo').onclick=showLandInfo;
 document.getElementById('sellLand').onclick=()=>showSellModal(false);
-document.getElementById('roll').onclick=roll;document.getElementById('buy').onclick=buy;document.getElementById('end').onclick=end;</script>
+document.getElementById('roll').onclick=roll;document.getElementById('buy').onclick=buy;document.getElementById('end').onclick=end;
+window.addEventListener('load',async()=>{
+ updateResumeButton();
+ const code=localStorage.getItem('wtResumeRoom')||localStorage.getItem('wtOnlineRoom');
+ if(code){
+   const ok=await resumeOnlineGame();
+   if(!ok){screen('lobby');updateResumeButton();}
+ }
+});
+
+</script>
 <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-database-compat.js"></script>
 <script>
@@ -2353,6 +2410,25 @@ async function createOnlineRoom(maxPlayers){
  watchOnlineRoom(code);watchChat(code);
  return code;
 }
+
+let lastPresenceEventAt=0;
+async function broadcastPresenceEvent(type){
+ if(gameMode!=='friend'||!onlineRoomCode||!onlinePlayerId)return;
+ const me=(latestOnlineRoom?.players||{})[onlinePlayerId];
+ const name=me?.name||P[localGameIndex()]?.name||'플레이어';
+ try{
+  await rtdb.ref(`rooms/${onlineRoomCode}/presenceEvent`).set({
+   type,name,playerId:onlinePlayerId,at:firebase.database.ServerValue.TIMESTAMP
+  });
+ }catch(e){}
+}
+function handlePresenceEvent(ev){
+ if(!ev||!ev.at||ev.at<=lastPresenceEventAt)return;
+ lastPresenceEventAt=ev.at;
+ if(ev.type==='left')gameNotice(`🚪 ${ev.name}님이 게임에서 나갔습니다.`,1800);
+ else if(ev.type==='reconnected')gameNotice(`↻ ${ev.name}님이 게임에 다시 접속했습니다.`,1800);
+}
+
 async function joinOnlineRoom(code){
  code=(code||'').trim().toUpperCase();
  if(code.length!==6)throw new Error('6자리 방 코드를 입력해주세요.');
@@ -2378,7 +2454,7 @@ function watchOnlineRoom(code){
  onlineRoomListener=rtdb.ref('rooms/'+code).on('value',snap=>{
    if(!snap.exists()){setRoomConnectionState('error','방 연결 끊김','방이 삭제되었거나 존재하지 않습니다.');localStorage.removeItem('wtOnlineRoom');screen('lobby');return}
    
-const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=room;if(room.settings){gameSettings={...gameSettings,...room.settings};onlineCheatEnabled=!!gameSettings.cheatEnabled;}renderRematchStatus(room);if(room.status==='playing'&&room.rematch)returnRoomToRematch(room).catch(()=>{});if(room.countdownAt&&room.countdownAt>Number(sessionStorage.getItem('wtCountdownSeen')||0)){sessionStorage.setItem('wtCountdownSeen',room.countdownAt);runStartCountdown();}
+const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=room;handlePresenceEvent(room.presenceEvent);if(room.settings){gameSettings={...gameSettings,...room.settings};onlineCheatEnabled=!!gameSettings.cheatEnabled;}renderRematchStatus(room);if(room.status==='playing'&&room.rematch)startAcceptedRematch(room).catch(()=>{});if(room.countdownAt&&room.countdownAt>Number(sessionStorage.getItem('wtCountdownSeen')||0)){sessionStorage.setItem('wtCountdownSeen',room.countdownAt);runStartCountdown();}
    setRoomConnectionState('online','● 게임 온라인',`방 ${code} · 참가자 ${entries.length}/${Number(room.maxPlayers||2)}명 · 실시간 연결됨`);
 
    const isMember=!!room.players?.[onlinePlayerId]||!!room.playerSnapshot?.[onlinePlayerId];
@@ -2486,6 +2562,7 @@ const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=
 }
 
 async function leaveOnlineRoom(){
+ await broadcastPresenceEvent('left');
  const code=onlineRoomCode||localStorage.getItem('wtOnlineRoom'),id=onlinePlayerId||makePlayerId();
  if(code){
   const snap=await rtdb.ref('rooms/'+code).once('value'),room=snap.val();
@@ -2550,7 +2627,7 @@ function applyRemoteGame(g,room){
  const arr=orderedOnlinePlayers(room);
  gameCount=arr.length;
  P=g.players.map((p,i)=>({...p,name:(arr[i]&&arr[i][1].name)||p.name||`플레이어 ${i+1}`}));
- if(Array.isArray(g.lands))g.lands.forEach((x,i)=>{if(data[i]&&x){data[i].owner=x.owner;data[i].bld=x.bld;data[i].purchasedLap=x.purchasedLap}});
+ if(Array.isArray(g.lands))g.lands.forEach((x,i)=>{if(data[i]&&x){data[i].owner=x.owner;data[i].bld=x.bld;data[i].purchasedLap=x.purchasedLap;data[i].rentFactor=Number.isFinite(x.rentFactor)?x.rentFactor:1}});
  turn=Number(g.turn)||0;rolled=!!g.rolled;dbl=!!g.dbl;over=!!g.over;turnLimit=Number.isFinite(Number(g.turnLimit))?Number(g.turnLimit):(Number.isFinite(Number(g.settings?.turnLimit))?Number(g.settings.turnLimit):0);turnsLeft=Number.isFinite(Number(g.turnsLeft))?Number(g.turnsLeft):turnLimit;roundTurnsDone=Number.isFinite(Number(g.roundTurnsDone))?Number(g.roundTurnsDone):0;window._rollDestination=Number.isInteger(g.destination)?g.destination:null;
  if(g.message!=null)document.getElementById('status').textContent=g.message;
  players();draw();renderMyItems();applyOnlineTurn(room);
@@ -2976,7 +3053,7 @@ function bindChatOnce(){
  };
  bind('chatSend','chatInput','game');bind('waitChatSend','waitChatInput','wait');
 }
-window.addEventListener('load',()=>{bindChatOnce();syncOnlineCheatLobby();},{once:true});
+window.addEventListener('load',bindChatOnce,{once:true});
 
 document.addEventListener('DOMContentLoaded',()=>{
  // 사이트를 새로 열면 항상 첫 화면부터 시작한다.
@@ -3047,6 +3124,6 @@ document.addEventListener('focusout',e=>{
  }
 });
 
-document.addEventListener('DOMContentLoaded',()=>syncOnlineCheatLobby());
+
 </script>
 </body></html>
