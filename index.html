@@ -1220,6 +1220,41 @@ button.primary{background:#477b93!important;border-color:#5a8ba1!important;color
  #gameApp{width:100%!important;height:auto!important;min-height:100dvh!important;overflow-x:hidden!important;overflow-y:auto!important}
 }
 </style>
+
+<style id="v135LobbyAndRefreshFix">
+/* 모바일 첫 화면을 화면 폭 중앙에 정상적으로 맞춤 */
+@media(max-width:820px){
+ .lobby-screen{
+   width:100%!important;
+   min-width:0!important;
+   padding:12px!important;
+   box-sizing:border-box!important;
+ }
+ .lobby-shell{
+   width:100%!important;
+   max-width:520px!important;
+   margin:0 auto!important;
+   box-sizing:border-box!important;
+ }
+ .lobby-card,.lobby-main,.resume-online-wrap,#resumeOnlineBtn{
+   width:100%!important;
+   max-width:none!important;
+   box-sizing:border-box!important;
+ }
+}
+
+/* 재접속은 첫 화면 메뉴와 같은 크기로 확실하게 표시 */
+#resumeOnlineWrap{
+ width:100%;
+ margin:0 0 10px!important;
+}
+#resumeOnlineBtn{
+ min-height:58px!important;
+ font-size:15px!important;
+ text-align:left!important;
+ padding:10px 16px!important;
+}
+</style>
 </head>
 <body>
 <div id="lobby" class="lobby-screen">
@@ -2799,8 +2834,10 @@ function updateResumeButton(){try{
 function saveOnlineResume(code,role='player'){
  if(!code)return;
  localStorage.setItem('wtResumeRoom',code);
+ localStorage.setItem('wtOnlineRoom',code);
  localStorage.setItem('wtResumeRole',role);
  localStorage.setItem('wtResumeUid',stableUid());
+ if(onlinePlayerId)localStorage.setItem('wtOnlinePlayerId',onlinePlayerId);
 }
 function clearOnlineResume(){
  localStorage.removeItem('wtResumeRoom');localStorage.removeItem('wtResumeRole');localStorage.removeItem('wtResumeUid');
@@ -3999,22 +4036,22 @@ function bindChatOnce(){
 window.addEventListener('load',bindChatOnce,{once:true});
 
 document.addEventListener('DOMContentLoaded',()=>{
- // 사이트를 새로 열면 항상 첫 화면부터 시작한다.
- setTimeout(()=>screen('lobby'),0);
-});
-document.addEventListener('DOMContentLoaded',()=>{
+ // 새로고침 시 로비로 강제 이동하지 않는다.
+ // 저장된 온라인 방이 있으면 즉시 게임판/대기방으로 복구하고, 없을 때만 로비를 연다.
  setTimeout(async()=>{
-   const code=localStorage.getItem('wtOnlineRoom'),savedId=localStorage.getItem('wtOnlinePlayerId');
-   if(!code||!savedId){screen('lobby');return}
-   try{
-     const snap=await rtdb.ref(`rooms/${code}`).once('value'),room=snap.val();
-     if(!room||!room.players?.[savedId]){localStorage.removeItem('wtOnlineRoom');localStorage.removeItem('wtOnlineRole');localStorage.removeItem('wtOnlinePlayerId');screen('lobby');return}
-     onlineRoomCode=code;onlinePlayerId=savedId;latestOnlineRoom=room;
-     await rtdb.ref(`rooms/${code}/players/${savedId}`).update({online:true,lastSeen:firebase.database.ServerValue.TIMESTAMP});
-     rtdb.ref(`rooms/${code}/players/${savedId}`).onDisconnect().update({online:false,lastSeen:firebase.database.ServerValue.TIMESTAMP});
-     watchOnlineRoom(code);watchChat(code);
-     screen(room.status==='playing'?'gameApp':'waitingRoom');
-   }catch(e){screen('lobby')}
+   const code=localStorage.getItem('wtResumeRoom')||localStorage.getItem('wtOnlineRoom');
+   if(!code){
+     screen('lobby');
+     refreshResumeOnlineButton();
+     updateResumeButton();
+     return;
+   }
+   const ok=await resumeOnlineGame();
+   if(!ok){
+     screen('lobby');
+     refreshResumeOnlineButton();
+     updateResumeButton();
+   }
  },0);
 });
 
@@ -4047,8 +4084,8 @@ async function resumeOnlineFromLobby(){
  const btn=document.getElementById('resumeOnlineBtn');
  if(btn){btn.disabled=true;btn.firstChild.textContent='↻ 연결 중... ';}
  try{
-   await restoreOnlineRoom();
-   if(!onlineRoomCode){
+   const ok=await resumeOnlineGame();
+   if(!ok){
      gameNotice('다시 연결할 온라인 게임이 없습니다.',1500);
      refreshResumeOnlineButton();
    }
