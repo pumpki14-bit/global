@@ -608,6 +608,46 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
 #lobby:not(.hidden) *{pointer-events:auto}
 #resumeOnlineBtn{pointer-events:auto!important}
 </style>
+
+<style id="v103KickVote">
+.pl{position:relative}
+.player-kick-x{position:absolute;right:4px;top:3px;width:19px;height:19px;padding:0!important;
+ border-radius:50%!important;font-size:11px!important;line-height:17px!important;min-height:0!important;
+ background:#702b32!important;border:1px solid #d66!important;color:#fff!important;z-index:5}
+.kick-vote-box{min-width:min(86vw,330px)}
+.kick-vote-dots{display:flex;gap:6px;justify-content:center;margin:10px 0}
+.kick-vote-dot{width:16px;height:16px;border-radius:50%;background:#40505c;border:2px solid #72828d}
+.kick-vote-dot.yes{background:#20cf69;border-color:#79f2aa}
+</style>
+
+<style id="v104PresenceTopNotice">
+.presence-top-notice{
+ position:fixed;top:7px;left:50%;transform:translateX(-50%);
+ z-index:99999;max-width:82vw;padding:5px 10px;border-radius:999px;
+ background:rgba(17,29,39,.94);border:1px solid rgba(255,255,255,.18);
+ color:#fff;font-size:11px;font-weight:700;line-height:1.2;
+ pointer-events:none;box-shadow:0 3px 12px rgba(0,0,0,.3);
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+</style>
+
+<style id="v105PersistentRematch">
+#persistentRematchBar{
+ position:fixed;top:7px;right:7px;z-index:9998;
+ display:flex;align-items:center;gap:4px;
+ padding:3px 5px;border-radius:999px;
+ background:rgba(14,26,35,.88);border:1px solid rgba(255,255,255,.15);
+ font-size:9px;box-shadow:0 2px 8px rgba(0,0,0,.25)
+}
+#persistentRematchBar button{
+ min-height:0!important;width:auto!important;margin:0!important;
+ padding:3px 6px!important;border-radius:999px!important;font-size:9px!important;
+}
+#persistentRematchDots{display:flex;gap:2px}
+#persistentRematchDots i{width:7px;height:7px;border-radius:50%;background:#53636e}
+#persistentRematchDots i.yes{background:#25d66e}
+#persistentRematchDots i.no{background:#e65353}
+</style>
 </head>
 <body>
 <div id="lobby" class="lobby-screen">
@@ -998,12 +1038,7 @@ function bankruptcyRiskHtml(p,t){
  if(fee<=cash)return '';
  return `<div class="bankrupt-warning">⚠ 파산 위험 · 통행료 ${won(fee)} / 현금 ${won(cash)}<br>${canCover?'보유 땅을 매각하면 지불 가능합니다.':'전 재산을 매각해도 부족합니다.'}</div>`;
 }
-function showTurnSplash(i){
- const me=localGameIndex();if(i!==me)return;
- document.querySelector('.turn-splash')?.remove();
- const o=document.createElement('div');o.className='turn-splash';o.innerHTML='<div>🎲 내 턴입니다</div>';document.body.appendChild(o);
- tone(620,.08,.035,'sine');tone(820,.10,.025,'sine',.08);setTimeout(()=>o.remove(),1050);
-}
+function showTurnSplash(i){}
 function canBuildTile(t,i){
  return !!t&&t.type==='CITY'&&t.owner===i&&t.bld<4&&P[i]&&!P[i].dead&&(P[i].laps||0)>(t.purchasedLap??-1);
 }
@@ -1212,7 +1247,81 @@ function transferBankruptAssets(from,to=-1){
  data.filter(t=>t.owner===from).forEach(t=>{t.owner=(to>=0&&!P[to]?.dead)?to:-1;if(t.owner<0){t.bld=0;t.purchasedLap=-1}});
 }
 
-function players(){renderMyItems();renderAssetSummary();updateTurnBadge();document.getElementById('players').innerHTML=P.map((p,i)=>`<div class="pl ${p.dead?'dead':''}" style="--c:${PC[i]}"><div class="row"><b>${i===turn?'▶ ':''}${p.name}</b><b>${won(p.money)}</b></div><div class="row"><span>증서 ${data.filter(t=>t.owner===i).length}</span><span>${p.jail?'🏝️ '+p.jail+'턴':''}</span></div></div>`).join('')}
+
+function onlineMemberIds(room=latestOnlineRoom){
+ return (room?.playerOrder||Object.keys(room?.playerSnapshot||room?.players||{})).filter(id=>room?.playerSnapshot?.[id]||room?.players?.[id]);
+}
+function kickTargetIndex(room,targetId){
+ const ids=onlineMemberIds(room);return ids.indexOf(targetId);
+}
+async function openKickVote(targetIndex){
+ if(gameMode!=='friend'||!onlineRoomCode||over)return;
+ const room=latestOnlineRoom||{},ids=onlineMemberIds(room),targetId=ids[targetIndex];
+ if(!targetId||targetId===onlinePlayerId)return;
+ const target=room.playerSnapshot?.[targetId]||room.players?.[targetId];
+ if(!target)return;
+ const current=room.kickVote;
+ if(current&&!current.resolved&&current.targetId!==targetId){gameNotice('이미 다른 추방 투표가 진행 중입니다.',1500);return}
+ if(!current||current.targetId!==targetId||current.resolved){
+  await rtdb.ref(`rooms/${onlineRoomCode}/kickVote`).set({
+   targetId,targetName:target.name||P[targetIndex]?.name||'플레이어',
+   startedBy:onlinePlayerId,startedAt:firebase.database.ServerValue.TIMESTAMP,votes:{}
+  });
+ }
+ showKickVote(latestOnlineRoom?.kickVote||{targetId,targetName:target.name||'플레이어',votes:{}});
+}
+function showKickVote(v){
+ if(!v||v.resolved||!v.targetId)return;
+ let o=document.getElementById('kickVoteOverlay');
+ if(!o){o=document.createElement('div');o.id='kickVoteOverlay';o.className='modal show';document.body.appendChild(o)}
+ const room=latestOnlineRoom||{},ids=onlineMemberIds(room).filter(id=>id!==v.targetId),votes=v.votes||{};
+ const dots=ids.map(id=>`<i class="kick-vote-dot ${votes[id]?'yes':''}"></i>`).join('');
+ const mine=votes[onlinePlayerId];
+ o.innerHTML=`<div class="modal-box kick-vote-box"><h3>🚫 플레이어 추방 투표</h3>
+ <p><b>${escapeHtml(v.targetName||'플레이어')}</b>님을 파산 처리하고 게임에서 추방할까요?</p>
+ <div class="kick-vote-dots">${dots}</div>
+ <small>${Object.values(votes).filter(Boolean).length} / ${ids.length} 동의</small>
+ <div style="display:flex;gap:8px;margin-top:12px"><button id="kickVoteYes" ${mine?'disabled':''}>동의</button><button id="kickVoteClose">닫기</button></div></div>`;
+ document.getElementById('kickVoteYes').onclick=()=>voteKickYes(v.targetId);
+ document.getElementById('kickVoteClose').onclick=()=>o.remove();
+}
+async function voteKickYes(targetId){
+ if(!onlineRoomCode||!onlinePlayerId)return;
+ const room=(await rtdb.ref(`rooms/${onlineRoomCode}`).once('value')).val();if(!room?.kickVote||room.kickVote.targetId!==targetId)return;
+ if(targetId===onlinePlayerId)return;
+ await rtdb.ref(`rooms/${onlineRoomCode}/kickVote/votes/${onlinePlayerId}`).set(true);
+ await resolveKickVote();
+}
+async function resolveKickVote(){
+ const snap=await rtdb.ref(`rooms/${onlineRoomCode}`).once('value'),room=snap.val();if(!room?.kickVote||room.kickVote.resolved)return;
+ const v=room.kickVote,eligible=onlineMemberIds(room).filter(id=>id!==v.targetId),votes=v.votes||{};
+ if(!eligible.length||!eligible.every(id=>votes[id]===true))return;
+ const idx=kickTargetIndex(room,v.targetId);if(idx<0)return;
+ // 한 클라이언트만 최종 처리하도록 트랜잭션 잠금
+ const lock=await rtdb.ref(`rooms/${onlineRoomCode}/kickVote/resolved`).transaction(x=>x?undefined:true);
+ if(!lock.committed)return;
+ if(P[idx]){
+  P[idx].money=0;P[idx].dead=true;P[idx].jail=0;
+  data.forEach(t=>{if(t.owner===idx){t.owner=-1;t.bld=0;t.purchasedLap=-1;t.rentFactor=1}});
+ }
+ // 추방된 사용자는 다시 이 게임으로 복귀하지 못하도록 멤버/스냅샷에서 제거
+ await rtdb.ref(`rooms/${onlineRoomCode}/players/${v.targetId}`).remove();
+ await rtdb.ref(`rooms/${onlineRoomCode}/playerSnapshot/${v.targetId}`).remove();
+ const newOrder=(room.playerOrder||[]).filter(id=>id!==v.targetId);
+ // P 배열은 현재 게임 인덱스를 유지해야 하므로 game.players에는 dead 상태를 남긴다.
+ await rtdb.ref(`rooms/${onlineRoomCode}`).update({playerOrder:newOrder,kickEvent:{targetId:v.targetId,name:v.targetName||P[idx]?.name||'플레이어',at:firebase.database.ServerValue.TIMESTAMP}});
+ await pushOnlineGame({kickEvent:{targetId:v.targetId,name:v.targetName||P[idx]?.name||'플레이어',at:Date.now()}});
+ gameNotice(`🚫 ${v.targetName||'플레이어'} 추방 · 파산 처리`,2200);
+ document.getElementById('kickVoteOverlay')?.remove();
+}
+function players(){
+ renderMyItems();renderAssetSummary();updateTurnBadge();
+ const me=(gameMode==='friend'&&onlineRoomCode)?onlinePlayerIndexFromCurrent():-1;
+ document.getElementById('players').innerHTML=P.map((p,i)=>`<div class="pl ${p.dead?'dead':''}" style="--c:${PC[i]}">
+ ${gameMode==='friend'&&!over&&!p.dead&&i!==me?`<button class="player-kick-x" onclick="openKickVote(${i})" title="추방 투표">×</button>`:''}
+ <div class="row"><b>${i===turn?'▶ ':''}${escapeHtml(p.name)}</b><b>${won(p.money)}</b></div>
+ <div class="row"><span>증서 ${data.filter(t=>t.owner===i).length}</span><span>${p.jail?'🏝️ '+p.jail+'턴':''}</span></div></div>`).join('');
+}
 function gameNotice(text,ms=1700){
  if(!text)return;
  const board=document.getElementById('gameApp')||document.body;if(!board)return;
@@ -1226,6 +1335,7 @@ function log(s){const box=document.getElementById('log');if(!box)return;let d=do
 function status(s){document.getElementById('turn').textContent=P[turn].name+' 차례';document.getElementById('status').textContent=s}
 function ui(){
  updateGameRoomCode();
+ if(gameMode==='friend'&&onlineRoomCode)ensurePersistentRematchBar(latestOnlineRoom);
  checkTeamGameOver();setTimeout(renderTurnOrder,0);
  if(window._lastUiTurn!==turn&&!over){
    window._lastUiTurn=turn;
@@ -1747,6 +1857,24 @@ function renderRematchStatus(room){
 }
 
 
+
+function ensurePersistentRematchBar(room=latestOnlineRoom){
+ let bar=document.getElementById('persistentRematchBar');
+ const active=gameMode==='friend'&&onlineRoomCode&&room?.status==='playing';
+ if(!active){bar?.remove();return}
+ if(!bar){
+  bar=document.createElement('div');bar.id='persistentRematchBar';
+  bar.innerHTML=`<button id="persistentRematchYes">↻ 재대결</button><div id="persistentRematchDots"></div><button id="persistentRematchNo">거절</button>`;
+  document.body.appendChild(bar);
+ }
+ const members=(room.playerOrder||Object.keys(room.playerSnapshot||room.players||{})).filter(id=>room.playerSnapshot?.[id]||room.players?.[id]);
+ const votes=room.rematch||{},rejected=!!room.rematchRejected;
+ const dots=document.getElementById('persistentRematchDots');
+ if(dots)dots.innerHTML=members.map(id=>`<i class="${votes[id]?.yes?'yes':votes[id]?.no?'no':''}"></i>`).join('');
+ const y=document.getElementById('persistentRematchYes'),n=document.getElementById('persistentRematchNo');
+ if(y){y.disabled=rejected||!!votes[onlinePlayerId]?.yes||!!votes[onlinePlayerId]?.no;y.onclick=requestRematch}
+ if(n){n.disabled=rejected||!!votes[onlinePlayerId]?.yes||!!votes[onlinePlayerId]?.no;n.onclick=rejectRematch}
+}
 function ensureOnlineRematchUI(){
  if(gameMode!=='friend'||!onlineRoomCode)return;
  const a=document.getElementById('ma');if(!a)return;
@@ -1770,7 +1898,7 @@ function showGameResults(){
  b.innerHTML=ranked.map((x,n)=>`${n+1}위 ${x.p.name} · ${money(x.asset)}`).join('<br>');
  a.innerHTML='';
  if(gameMode==='friend'&&onlineRoomCode){
-   ensureOnlineRematchUI();
+   ensurePersistentRematchBar(latestOnlineRoom);
  }else{
    const q=document.createElement('button');q.textContent='새 게임';q.onclick=()=>{m.classList.remove('show');reset()};a.appendChild(q);
  }
@@ -2440,6 +2568,12 @@ async function createOnlineRoom(maxPlayers){
  return code;
 }
 
+
+function presenceTopNotice(text,ms=2200){
+ document.querySelector('.presence-top-notice')?.remove();
+ const n=document.createElement('div');n.className='presence-top-notice';n.textContent=text;
+ document.body.appendChild(n);setTimeout(()=>n.remove(),ms);
+}
 let lastPresenceEventAt=0;
 async function broadcastPresenceEvent(type){
  if(gameMode!=='friend'||!onlineRoomCode||!onlinePlayerId)return;
@@ -2454,8 +2588,9 @@ async function broadcastPresenceEvent(type){
 function handlePresenceEvent(ev){
  if(!ev||!ev.at||ev.at<=lastPresenceEventAt)return;
  lastPresenceEventAt=ev.at;
- if(ev.type==='left')gameNotice(`🚪 ${ev.name}님이 게임에서 나갔습니다.`,1800);
- else if(ev.type==='reconnected')gameNotice(`↻ ${ev.name}님이 게임에 다시 접속했습니다.`,1800);
+ if(ev.type==='left'){presenceTopNotice(`🚪 ${ev.name}님이 게임에서 나갔습니다.`);gameNotice(`🚪 ${ev.name}님이 게임에서 나갔습니다.`,1800);}
+ else if(ev.type==='disconnected'){presenceTopNotice(`⚠️ ${ev.name}님 연결이 끊겼습니다.`);gameNotice(`⚠️ ${ev.name}님 연결이 끊겼습니다.`,1800);}
+ else if(ev.type==='reconnected'){presenceTopNotice(`↻ ${ev.name}님이 다시 접속했습니다.`);gameNotice(`↻ ${ev.name}님이 다시 접속했습니다.`,1800);}
 }
 
 async function joinOnlineRoom(code){
@@ -2476,14 +2611,46 @@ async function joinOnlineRoom(code){
  localStorage.setItem('wtOnlineRoom',code);localStorage.setItem('wtOnlineRole','guest');
  watchOnlineRoom(code);watchChat(code);return room;
 }
+
+let presenceConnectionRef=null,presenceConnectionCb=null,presenceWasConnected=null;
+function watchMyConnectionPresence(code){
+ try{
+  if(presenceConnectionRef&&presenceConnectionCb)presenceConnectionRef.off('value',presenceConnectionCb);
+  presenceConnectionRef=rtdb.ref('.info/connected');
+  presenceWasConnected=null;
+  presenceConnectionCb=async snap=>{
+   const connected=snap.val()===true;
+   if(presenceWasConnected===null){presenceWasConnected=connected;return}
+   if(connected===presenceWasConnected)return;
+   presenceWasConnected=connected;
+   if(!onlineRoomCode||onlineRoomCode!==code||!onlinePlayerId)return;
+   if(!connected){
+     // 오프라인 상태에서는 서버 쓰기가 불가능하므로 onDisconnect가 모든 클라이언트가 보는 이벤트를 남긴다.
+     return;
+   }
+   // 끊겼다가 Firebase 연결이 복구된 순간
+   await broadcastPresenceEvent('reconnected');
+  };
+  presenceConnectionRef.on('value',presenceConnectionCb);
+  // 연결이 끊기는 순간 서버가 전체 방에 남기는 이벤트
+  const me=(latestOnlineRoom?.players||{})[onlinePlayerId];
+  const name=me?.name||P[localGameIndex()]?.name||'플레이어';
+  rtdb.ref(`rooms/${code}/presenceEvent`).onDisconnect().set({
+   type:'disconnected',name,playerId:onlinePlayerId,at:firebase.database.ServerValue.TIMESTAMP
+  });
+ }catch(e){}
+}
 function watchOnlineRoom(code){
  setRoomConnectionState('loading','방 연결 중...',`방 ${code} 정보를 불러오는 중입니다.`);
  if(onlineRoomListener&&onlineRoomCode)rtdb.ref('rooms/'+onlineRoomCode).off('value',onlineRoomListener);
  onlineRoomCode=code;
+ watchMyConnectionPresence(code);
  onlineRoomListener=rtdb.ref('rooms/'+code).on('value',snap=>{
    if(!snap.exists()){setRoomConnectionState('error','방 연결 끊김','방이 삭제되었거나 존재하지 않습니다.');localStorage.removeItem('wtOnlineRoom');screen('lobby');return}
    
-const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=room;handlePresenceEvent(room.presenceEvent);if(over)ensureOnlineRematchUI();if(room.settings){gameSettings={...gameSettings,...room.settings};onlineCheatEnabled=!!gameSettings.cheatEnabled;}renderRematchStatus(room);if(room.status==='playing'&&room.rematch)startAcceptedRematch(room).catch(()=>{});if(room.countdownAt&&room.countdownAt>Number(sessionStorage.getItem('wtCountdownSeen')||0)){sessionStorage.setItem('wtCountdownSeen',room.countdownAt);runStartCountdown();}
+const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=room;if(room.kickVote&&!room.kickVote.resolved)showKickVote(room.kickVote);
+if(room.kickEvent?.at&&room.kickEvent.at>(window._kickSeen||0)){window._kickSeen=room.kickEvent.at;gameNotice(`🚫 ${room.kickEvent.name} 추방 · 파산 처리`,2200)}
+if(room.kickEvent?.targetId===onlinePlayerId){clearOnlineResume();localStorage.removeItem('wtOnlineRoom');localStorage.removeItem('wtOnlineRole');onlineRoomCode=null;gameNotice('이 게임에서 추방되었습니다.',1800);setTimeout(()=>screen('lobby'),900);return;}handlePresenceEvent(room.presenceEvent);if(over)ensureOnlineRematchUI();if(room.settings){gameSettings={...gameSettings,...room.settings};onlineCheatEnabled=!!gameSettings.cheatEnabled;}renderRematchStatus(room);ensurePersistentRematchBar(room);if(room.status==='playing'&&room.rematch)startAcceptedRematch(room).catch(()=>{});if(room.countdownAt&&room.countdownAt>Number(sessionStorage.getItem('wtCountdownSeen')||0)){sessionStorage.setItem('wtCountdownSeen',room.countdownAt);runStartCountdown();}
    setRoomConnectionState('online','● 게임 온라인',`방 ${code} · 참가자 ${entries.length}/${Number(room.maxPlayers||2)}명 · 실시간 연결됨`);
 
    const isMember=!!room.players?.[onlinePlayerId]||!!room.playerSnapshot?.[onlinePlayerId];
@@ -2999,13 +3166,14 @@ async function loadSpectateGames(){
  try{
   const snap=await rtdb.ref('rooms').once('value'),rooms=snap.val()||{},now=Date.now(),live=[];
   for(const [code,r] of Object.entries(rooms)){
-   const players=orderedOnlinePlayers(r);
-   const valid=r&&r.status==='playing'&&r.public===true&&r.game&&Array.isArray(r.game.players)&&players.length>=2;
-   const stamp=Number(r.game?.updatedAt||r.startedAt||0);
-   const stale=stamp&&now-stamp>6*60*60*1000;
+   const players=orderedOnlinePlayers(r),livePlayers=Object.entries(r?.players||{}).filter(([id,p])=>p&&p.online!==false);
+   const stamp=Number(r.game?.updatedAt||r.startedAt||0),stale=stamp&&now-stamp>6*60*60*1000;
+   const allGone=Object.keys(r?.players||{}).length===0;
+   const disconnectedTooLong=livePlayers.length===0&&stamp&&now-stamp>70000;
+   const valid=r&&r.status==='playing'&&r.public===true&&r.game&&Array.isArray(r.game.players)&&players.length>=2&&!allGone&&!disconnectedTooLong;
    if(valid&&!stale)live.push([code,r]);
-   else if(r?.status==='playing'&&(!r.game||players.length<2||stale)){
-     // 오래된/깨진 관전 항목은 목록에서 제거
+   else if(allGone||disconnectedTooLong||r?.status==='playing'&&(!r.game||players.length<2||stale)){
+     // 전원 퇴장/장시간 전원 연결끊김/깨진 게임은 관전 유령방에서 제거
      rtdb.ref(`rooms/${code}`).remove().catch(()=>{});
    }
   }
