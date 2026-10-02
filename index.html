@@ -633,11 +633,10 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
 
 <style id="v105PersistentRematch">
 #persistentRematchBar{
- position:fixed;top:7px;right:7px;z-index:9998;
- display:flex;align-items:center;gap:4px;
+ display:inline-flex;align-items:center;gap:4px;
  padding:3px 5px;border-radius:999px;
  background:rgba(14,26,35,.88);border:1px solid rgba(255,255,255,.15);
- font-size:9px;box-shadow:0 2px 8px rgba(0,0,0,.25)
+ font-size:9px;box-shadow:none;vertical-align:middle
 }
 #persistentRematchBar button{
  min-height:0!important;width:auto!important;margin:0!important;
@@ -1296,22 +1295,32 @@ async function resolveKickVote(){
  const snap=await rtdb.ref(`rooms/${onlineRoomCode}`).once('value'),room=snap.val();if(!room?.kickVote||room.kickVote.resolved)return;
  const v=room.kickVote,eligible=onlineMemberIds(room).filter(id=>id!==v.targetId),votes=v.votes||{};
  if(!eligible.length||!eligible.every(id=>votes[id]===true))return;
- const idx=kickTargetIndex(room,v.targetId);if(idx<0)return;
- // 한 클라이언트만 최종 처리하도록 트랜잭션 잠금
+ const oldOrder=room.playerOrder||onlineMemberIds(room),idx=oldOrder.indexOf(v.targetId);if(idx<0)return;
  const lock=await rtdb.ref(`rooms/${onlineRoomCode}/kickVote/resolved`).transaction(x=>x?undefined:true);
  if(!lock.committed)return;
- if(P[idx]){
-  P[idx].money=0;P[idx].dead=true;P[idx].jail=0;
-  data.forEach(t=>{if(t.owner===idx){t.owner=-1;t.bld=0;t.purchasedLap=-1;t.rentFactor=1}});
- }
- // 추방된 사용자는 다시 이 게임으로 복귀하지 못하도록 멤버/스냅샷에서 제거
+
+ // 추방자의 모든 땅/건물 삭제. 뒤 플레이어 owner 인덱스는 한 칸 당겨 현재 P와 맞춘다.
+ data.forEach(t=>{
+   if(t.owner===idx){t.owner=-1;t.bld=0;t.purchasedLap=-1;t.rentFactor=1}
+   else if(t.owner>idx)t.owner--;
+ });
+ // 프로필과 보드 말까지 완전히 제거
+ if(idx>=0&&idx<P.length)P.splice(idx,1);
+ gameCount=P.length;
+ if(turn>idx)turn--; else if(turn>=gameCount)turn=0;
+ if(turn<0)turn=0;
+
+ const newOrder=oldOrder.filter(id=>id!==v.targetId);
  await rtdb.ref(`rooms/${onlineRoomCode}/players/${v.targetId}`).remove();
  await rtdb.ref(`rooms/${onlineRoomCode}/playerSnapshot/${v.targetId}`).remove();
- const newOrder=(room.playerOrder||[]).filter(id=>id!==v.targetId);
- // P 배열은 현재 게임 인덱스를 유지해야 하므로 game.players에는 dead 상태를 남긴다.
- await rtdb.ref(`rooms/${onlineRoomCode}`).update({playerOrder:newOrder,kickEvent:{targetId:v.targetId,name:v.targetName||P[idx]?.name||'플레이어',at:firebase.database.ServerValue.TIMESTAMP}});
- await pushOnlineGame({kickEvent:{targetId:v.targetId,name:v.targetName||P[idx]?.name||'플레이어',at:Date.now()}});
- gameNotice(`🚫 ${v.targetName||'플레이어'} 추방 · 파산 처리`,2200);
+ await rtdb.ref(`rooms/${onlineRoomCode}`).update({
+   playerOrder:newOrder,
+   kickEvent:{targetId:v.targetId,name:v.targetName||'플레이어',at:firebase.database.ServerValue.TIMESTAMP},
+   kickVote:null
+ });
+ await pushOnlineGame({kickEvent:{targetId:v.targetId,name:v.targetName||'플레이어',at:Date.now()}});
+ ui();
+ gameNotice(`🚫 ${v.targetName||'플레이어'} 추방 · 말/프로필/땅 제거`,2200);
  document.getElementById('kickVoteOverlay')?.remove();
 }
 function players(){
@@ -1817,8 +1826,11 @@ function propertyValueFor(i){
 
 async function requestRematch(){
  if(gameMode!=='friend'||!onlineRoomCode)return;
- const room=latestOnlineRoom||{};
- if(room.rematchRejected){gameNotice('❌ 누군가 재대결을 거절해 이번 게임은 다시 시작할 수 없습니다.',1800);return}
+ let room=latestOnlineRoom||{};
+ if(room.rematchRejected){
+   await rtdb.ref(`rooms/${onlineRoomCode}`).update({rematch:null,rematchRejected:null,rematchStarting:null});
+   room={...room,rematch:null,rematchRejected:null};
+ }
  await rtdb.ref(`rooms/${onlineRoomCode}/rematch/${onlinePlayerId}`).set({yes:true,at:firebase.database.ServerValue.TIMESTAMP});
  gameNotice('🔄 다시하기 수락',1000);
 }
@@ -1828,7 +1840,13 @@ async function rejectRematch(){
    rematchRejected:true,
    [`rematch/${onlinePlayerId}`]:{yes:false,no:true,at:firebase.database.ServerValue.TIMESTAMP}
  });
- gameNotice('❌ 재대결을 거절했습니다.',1200);
+ gameNotice('❌ 재대결 기각 · 다시 투표할 수 있습니다.',1400);
+ setTimeout(async()=>{
+   try{
+    const snap=await rtdb.ref(`rooms/${onlineRoomCode}`).once('value'),r=snap.val();
+    if(r?.rematchRejected)await rtdb.ref(`rooms/${onlineRoomCode}`).update({rematch:null,rematchRejected:null,rematchStarting:null});
+   }catch(e){}
+ },1500);
 }
 async function startAcceptedRematch(room){
  if(!onlineRoomCode||room.host!==onlinePlayerId||room.rematchStarting)return;
@@ -1865,7 +1883,9 @@ function ensurePersistentRematchBar(room=latestOnlineRoom){
  if(!bar){
   bar=document.createElement('div');bar.id='persistentRematchBar';
   bar.innerHTML=`<button id="persistentRematchYes">↻ 재대결</button><div id="persistentRematchDots"></div><button id="persistentRematchNo">거절</button>`;
-  document.body.appendChild(bar);
+  const roomCodeBtn=document.getElementById('gameRoomCode');
+  if(roomCodeBtn?.parentNode)roomCodeBtn.parentNode.insertBefore(bar,roomCodeBtn);
+  else document.body.appendChild(bar);
  }
  const members=(room.playerOrder||Object.keys(room.playerSnapshot||room.players||{})).filter(id=>room.playerSnapshot?.[id]||room.players?.[id]);
  const votes=room.rematch||{},rejected=!!room.rematchRejected;
@@ -2758,6 +2778,7 @@ if(room.kickEvent?.targetId===onlinePlayerId){clearOnlineResume();localStorage.r
 }
 
 async function leaveOnlineRoom(){
+ document.getElementById('persistentRematchBar')?.remove();
  await broadcastPresenceEvent('left');
  const code=onlineRoomCode||localStorage.getItem('wtOnlineRoom'),id=onlinePlayerId||makePlayerId();
  if(code){
@@ -3126,6 +3147,8 @@ async function loadPublicRooms(){
   const snap=await rtdb.ref('rooms').once('value'),rooms=snap.val()||{},now=Date.now();
   const open=[];
   for(const [code,r] of Object.entries(rooms)){
+   if(Object.keys(r?.players||{}).length===0){rtdb.ref(`rooms/${code}`).remove().catch(()=>{});continue}
+
    if(!r||r.public!==true||r.status!=='waiting')continue;
    const entries=Object.entries(r.players||{});
    // heartbeat가 70초 이상 끊긴 플레이어는 유령으로 간주한다.
@@ -3166,13 +3189,16 @@ async function loadSpectateGames(){
  try{
   const snap=await rtdb.ref('rooms').once('value'),rooms=snap.val()||{},now=Date.now(),live=[];
   for(const [code,r] of Object.entries(rooms)){
-   const players=orderedOnlinePlayers(r),livePlayers=Object.entries(r?.players||{}).filter(([id,p])=>p&&p.online!==false);
+   const players=orderedOnlinePlayers(r),playerEntries=Object.entries(r?.players||{});
+   const livePlayers=playerEntries.filter(([id,p])=>p&&p.online===true);
    const stamp=Number(r.game?.updatedAt||r.startedAt||0),stale=stamp&&now-stamp>6*60*60*1000;
-   const allGone=Object.keys(r?.players||{}).length===0;
-   const disconnectedTooLong=livePlayers.length===0&&stamp&&now-stamp>70000;
-   const valid=r&&r.status==='playing'&&r.public===true&&r.game&&Array.isArray(r.game.players)&&players.length>=2&&!allGone&&!disconnectedTooLong;
+   const allGone=playerEntries.length===0;
+   const newestSeen=Math.max(0,...playerEntries.map(([id,p])=>Number(p?.lastSeen||0)));
+   const disconnectedTooLong=playerEntries.length>0&&livePlayers.length===0&&newestSeen>0&&now-newestSeen>70000;
+   const ghostSnapshotOnly=playerEntries.length===0&&Object.keys(r?.playerSnapshot||{}).length>0;
+   const valid=r&&r.status==='playing'&&r.public===true&&r.game&&Array.isArray(r.game.players)&&players.length>=2&&!allGone&&!disconnectedTooLong&&!ghostSnapshotOnly;
    if(valid&&!stale)live.push([code,r]);
-   else if(allGone||disconnectedTooLong||r?.status==='playing'&&(!r.game||players.length<2||stale)){
+   else if(allGone||ghostSnapshotOnly||disconnectedTooLong||r?.status==='playing'&&(!r.game||players.length<2||stale)){
      // 전원 퇴장/장시간 전원 연결끊김/깨진 게임은 관전 유령방에서 제거
      rtdb.ref(`rooms/${code}`).remove().catch(()=>{});
    }
