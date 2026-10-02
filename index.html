@@ -570,6 +570,44 @@ button{touch-action:manipulation}.controls button,.chat-send button,.lobby-shell
 }
 #turnBanner.hidden{display:none!important}
 </style>
+
+<style id="v99TurnRematchFix">
+#turnBanner{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}
+.rematch-vote-wrap{display:block!important;margin:12px 0 8px;padding:11px;border:1px solid #405565;border-radius:12px;background:#101d27}
+.rematch-dots{display:flex!important;gap:7px;justify-content:center;margin:8px 0}
+.rematch-dot{display:inline-block;width:17px;height:17px;border-radius:50%;background:#394955;border:2px solid #71818c}
+.rematch-dot.yes{background:#24d66f;border-color:#74f6a8;box-shadow:0 0 8px rgba(36,214,111,.65)}
+.rematch-dot.no{background:#e55353;border-color:#ff9494}
+</style>
+
+<style id="v101TinyReconnect">
+#resumeOnlineBtn{
+ position:absolute!important;
+ top:7px!important;
+ left:50%!important;
+ transform:translateX(-50%)!important;
+ width:auto!important;
+ max-width:70vw!important;
+ min-height:0!important;
+ margin:0!important;
+ padding:3px 8px!important;
+ border-radius:999px!important;
+ font-size:9px!important;
+ line-height:1.2!important;
+ z-index:30!important;
+ opacity:.78!important;
+ white-space:nowrap!important;
+ overflow:hidden!important;
+ text-overflow:ellipsis!important;
+ box-shadow:none!important;
+}
+</style>
+
+<style id="v102LobbyUnfreeze">
+#lobby:not(.hidden){pointer-events:auto!important}
+#lobby:not(.hidden) *{pointer-events:auto}
+#resumeOnlineBtn{pointer-events:auto!important}
+</style>
 </head>
 <body>
 <div id="lobby" class="lobby-screen">
@@ -1708,41 +1746,35 @@ function renderRematchStatus(room){
  if(noBtn)noBtn.disabled=rejected||!!votes[onlinePlayerId]?.yes||!!votes[onlinePlayerId]?.no;
 }
 
-function showGameResults(){
- if(!window._historySaved){window._historySaved=true;recordGameHistory()}
- const rows=P.slice(0,gameCount).map((p,i)=>({
-   i,name:p.name,money:p.money||0,property:propertyValueFor(i),
-   total:(p.money||0)+propertyValueFor(i),lands:data.filter(t=>t.owner===i).length,dead:!!p.dead
- })).sort((a,b)=>b.total-a.total);
- document.getElementById('mh').textContent=turnLimit>0&&turnsLeft===0?'⏱️ 턴 제한 종료 · 최종 순위':'🏆 게임 결과';
- const teamSummary=isTeamRoom()?`<div class="rematch-box"><b>🔵 BLUE TEAM ${won(rows.filter(r=>teamOfPlayerIndex(r.i)==='A').reduce((a,r)=>a+r.total,0))}</b><br><b>🔴 RED TEAM ${won(rows.filter(r=>teamOfPlayerIndex(r.i)==='B').reduce((a,r)=>a+r.total,0))}</b></div>`:'';
- document.getElementById('mb').innerHTML=teamSummary+`<div class="result-board">${rows.map((r,idx)=>`
-   <div class="result-row ${idx===0?'winner':''}">
-    <div class="result-rank">${idx+1}위</div>
-    <div class="result-name">${escapeHtml(r.name)}</div>
-    <div class="result-stats">
-      <span>현금 <b>${won(r.money)}</b></span>
-      <span>부동산 <b>${won(r.property)}</b></span>
-      <span>보유 땅 <b>${r.lands}개</b></span>
-      <span>총자산 <b>${won(r.total)}</b></span><span>통행료 수입 <b>${won(ensureStats(P[r.i]).tollIncome)}</b></span><span>통행료 지출 <b>${won(ensureStats(P[r.i]).tollPaid)}</b></span><span>구매/건설 <b>${won(ensureStats(P[r.i]).purchase+ensureStats(P[r.i]).build)}</b></span><span>황금열쇠 <b>${ensureStats(P[r.i]).keys}회</b></span>
-    </div>
-   </div>`).join('')}</div>`;
- const a=document.getElementById('ma');a.innerHTML='';
- if(gameMode==='friend'&&onlineRoomCode){
-   const box=document.createElement('div');box.className='rematch-vote-wrap';
-   box.innerHTML=`<div class="rematch-actions"><button id="rematchBtn">🔄 다시하기 수락</button><button id="rematchRejectBtn">✕ 거절</button></div><div id="rematchDots" class="rematch-dots"></div><div id="rematchStatus" class="rematch-vote-text"></div>`;
-   a.appendChild(box);
-   box.querySelector('#rematchBtn').onclick=requestRematch;
-   box.querySelector('#rematchRejectBtn').onclick=rejectRematch;
-   renderRematchStatus(latestOnlineRoom);
+
+function ensureOnlineRematchUI(){
+ if(gameMode!=='friend'||!onlineRoomCode)return;
+ const a=document.getElementById('ma');if(!a)return;
+ let box=document.getElementById('onlineRematchPanel');
+ if(!box){
+  box=document.createElement('div');box.id='onlineRematchPanel';box.className='rematch-vote-wrap';
+  box.innerHTML=`<div style="font-weight:800;margin-bottom:8px">🔄 재대결</div>
+  <div class="rematch-actions"><button id="rematchBtn">다시하기 수락</button><button id="rematchRejectBtn">거절</button></div>
+  <div id="rematchDots" class="rematch-dots"></div><div id="rematchStatus" class="rematch-vote-text"></div>`;
+  a.appendChild(box);
  }
- const lobby=document.createElement('button');lobby.textContent='로비로';lobby.onclick=async()=>{
-   document.getElementById('modal').classList.remove('show');
-   if(gameMode==='friend')await leaveOnlineRoom();
-   else screen('lobby');
- };
- a.appendChild(lobby);
- document.getElementById('modal').classList.add('show');
+ document.getElementById('rematchBtn').onclick=requestRematch;
+ document.getElementById('rematchRejectBtn').onclick=rejectRematch;
+ renderRematchStatus(latestOnlineRoom||{});
+}
+function showGameResults(){
+ const m=document.getElementById('modal'),h=document.getElementById('mh'),b=document.getElementById('mb'),a=document.getElementById('ma');
+ if(!m||!a)return;
+ h.textContent='🏁 게임 종료';
+ const ranked=P.map((p,i)=>({p,i,asset:p.money+data.filter(x=>x.owner===i).reduce((sum,x)=>sum+(x.price||0)+(x.bld||0)*(x.build||0),0)})).sort((x,y)=>y.asset-x.asset);
+ b.innerHTML=ranked.map((x,n)=>`${n+1}위 ${x.p.name} · ${money(x.asset)}`).join('<br>');
+ a.innerHTML='';
+ if(gameMode==='friend'&&onlineRoomCode){
+   ensureOnlineRematchUI();
+ }else{
+   const q=document.createElement('button');q.textContent='새 게임';q.onclick=()=>{m.classList.remove('show');reset()};a.appendChild(q);
+ }
+ m.classList.add('show');
 }
 
 function bankrupt(i,creditor=-1){
@@ -1925,20 +1957,20 @@ function screen(id){
 }
 
 
-function updateResumeButton(){
+function updateResumeButton(){try{
  let btn=document.getElementById('resumeOnlineBtn');
  const code=localStorage.getItem('wtResumeRoom')||localStorage.getItem('wtOnlineRoom');
  const lobby=document.getElementById('lobby');
  if(!lobby)return;
  if(!btn){
    btn=document.createElement('button');btn.id='resumeOnlineBtn';btn.className='big-btn';
-   btn.onclick=async()=>{btn.disabled=true;btn.textContent='↻ 재접속 중...';const ok=await resumeOnlineGame();if(!ok){btn.disabled=false;btn.textContent='↻ 진행 중인 게임 다시 들어가기';gameNotice('재접속할 게임을 찾지 못했습니다.',1400)}};
+   btn.onclick=async()=>{btn.disabled=true;btn.textContent='↻ 연결 중';const ok=await resumeOnlineGame();if(!ok){btn.disabled=false;btn.textContent='↻ 게임 재접속';gameNotice('재접속할 게임을 찾지 못했습니다.',1400)}};
    const target=lobby.querySelector('.lobby-actions,.menu,.buttons')||lobby;
    target.appendChild(btn);
  }
  btn.style.display=code?'':'none';
- if(code){btn.disabled=false;btn.textContent=`↻ 진행 중인 게임 다시 들어가기 (${code})`;}
-}
+ if(code){btn.disabled=false;btn.textContent=`↻ 재접속 · ${code}`;}
+}catch(e){console.warn('resume button skipped',e)}}
 function saveOnlineResume(code,role='player'){
  if(!code)return;
  localStorage.setItem('wtResumeRoom',code);
@@ -2088,7 +2120,7 @@ function openGoldenKeyGuide(){
 document.getElementById('exitGame').addEventListener('click',async e=>{
  if(gameMode==='friend'&&onlineRoomCode){
    e.preventDefault();e.stopImmediatePropagation();
-   if(confirm('게임에서 나갈까요?')){document.body.classList.remove('friend-online');document.getElementById('onlineTurnBanner').style.display='none';await leaveOnlineRoom();}
+   if(confirm('게임에서 나갈까요?')){document.body.classList.remove('friend-online');await leaveOnlineRoom();}
  }
 },true);
 document.getElementById('exitGame').onclick=exitAIGame;
@@ -2121,13 +2153,10 @@ function autoPlayTick(){
 document.getElementById('landInfo').onclick=showLandInfo;
 document.getElementById('sellLand').onclick=()=>showSellModal(false);
 document.getElementById('roll').onclick=roll;document.getElementById('buy').onclick=buy;document.getElementById('end').onclick=end;
-window.addEventListener('load',async()=>{
- updateResumeButton();
- const code=localStorage.getItem('wtResumeRoom')||localStorage.getItem('wtOnlineRoom');
- if(code){
-   const ok=await resumeOnlineGame();
-   if(!ok){screen('lobby');updateResumeButton();}
- }
+window.addEventListener('load',()=>{
+ // 첫 화면은 HTML 기본 로비 상태를 그대로 사용한다.
+ // Firebase/온라인 초기화와 충돌하지 않도록 여기서 screen()을 강제 호출하지 않는다.
+ requestAnimationFrame(()=>{ try{updateResumeButton()}catch(e){} });
 });
 
 </script>
@@ -2454,7 +2483,7 @@ function watchOnlineRoom(code){
  onlineRoomListener=rtdb.ref('rooms/'+code).on('value',snap=>{
    if(!snap.exists()){setRoomConnectionState('error','방 연결 끊김','방이 삭제되었거나 존재하지 않습니다.');localStorage.removeItem('wtOnlineRoom');screen('lobby');return}
    
-const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=room;handlePresenceEvent(room.presenceEvent);if(room.settings){gameSettings={...gameSettings,...room.settings};onlineCheatEnabled=!!gameSettings.cheatEnabled;}renderRematchStatus(room);if(room.status==='playing'&&room.rematch)startAcceptedRematch(room).catch(()=>{});if(room.countdownAt&&room.countdownAt>Number(sessionStorage.getItem('wtCountdownSeen')||0)){sessionStorage.setItem('wtCountdownSeen',room.countdownAt);runStartCountdown();}
+const room=snap.val(),entries=Object.entries(room.players||{});latestOnlineRoom=room;handlePresenceEvent(room.presenceEvent);if(over)ensureOnlineRematchUI();if(room.settings){gameSettings={...gameSettings,...room.settings};onlineCheatEnabled=!!gameSettings.cheatEnabled;}renderRematchStatus(room);if(room.status==='playing'&&room.rematch)startAcceptedRematch(room).catch(()=>{});if(room.countdownAt&&room.countdownAt>Number(sessionStorage.getItem('wtCountdownSeen')||0)){sessionStorage.setItem('wtCountdownSeen',room.countdownAt);runStartCountdown();}
    setRoomConnectionState('online','● 게임 온라인',`방 ${code} · 참가자 ${entries.length}/${Number(room.maxPlayers||2)}명 · 실시간 연결됨`);
 
    const isMember=!!room.players?.[onlinePlayerId]||!!room.playerSnapshot?.[onlinePlayerId];
@@ -2700,11 +2729,7 @@ function applyOnlineTurn(room){
  const arr=orderedOnlinePlayers(room); if(!arr.length)return;
  const idx=(room.game&&Number.isInteger(room.game.turn))?room.game.turn:(Number(turn)||0);
  const current=arr[idx%arr.length],mine=!!current&&current[0]===onlinePlayerId;
- const banner=document.getElementById('onlineTurnBanner');
- if(banner){
-  banner.style.display='block';banner.classList.toggle('mine',mine);
-  banner.textContent=mine?'🟢 내 차례 — 주사위를 굴리세요':`🔴 상대 차례 — ${current?.[1]?.name||'상대'} 플레이 중`;
- }
+
  document.body.classList.add('friend-online');autoPlay=false;
  const rb=document.getElementById('roll');if(rb)rb.disabled=!mine||rolled||over;
  const eb=document.getElementById('end');if(eb)eb.disabled=!mine||!rolled||over||actionLocked||rollLock||P[turn]?.dead||P[turn]?.money<=0;
@@ -2849,7 +2874,7 @@ window.addEventListener('load',()=>{
 });
 </script>
 
-<div id="onlineTurnBanner" class="turn-banner" style="display:none"></div><div id="spectatorBadge" class="spectator-badge" style="display:none">👁️ 관전자 0명</div>
+<div id="spectatorBadge" class="spectator-badge" style="display:none">👁️ 관전자 0명</div>
 
 <script>
 window.addEventListener('load',()=>{
@@ -3021,8 +3046,6 @@ async function startSpectating(code){
    ['roll','buy','end','sellLand','autoPlay'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=true});
    const count=Object.keys(r.spectators||{}).length;
    document.getElementById('spectatorBadge').textContent=`👁️ 관전자 ${count}명`;
-   const banner=document.getElementById('onlineTurnBanner');
-   if(banner){banner.style.display='';banner.textContent='👁️ 관전 중 — 게임 조작은 할 수 없습니다.'}
  });
  watchSpectatorChat(code);
 }
