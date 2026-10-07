@@ -1255,6 +1255,26 @@ button.primary{background:#477b93!important;border-color:#5a8ba1!important;color
  padding:10px 16px!important;
 }
 </style>
+
+<style id="v136MyLandButtonCSS">
+#gameApp button{touch-action:manipulation}
+#gameApp .controls button,#gameApp .actions button{
+ position:relative;
+ z-index:20;
+ pointer-events:auto!important;
+}
+</style>
+
+<style id="v139MyLandOwnedOnlyCSS">
+#myOwnedLandModal{display:none;position:fixed;inset:0;z-index:100000;background:rgba(5,15,20,.72);padding:18px;align-items:center;justify-content:center}
+#myOwnedLandModal.show{display:flex}
+.my-owned-card{width:min(440px,100%);max-height:75dvh;overflow:auto;background:#18303a;border:1px solid #49636d;border-radius:16px;padding:14px;color:#fff;box-shadow:0 15px 45px rgba(0,0,0,.4)}
+.my-owned-head{display:flex;align-items:center;justify-content:space-between;font-size:18px;margin-bottom:10px}
+.my-owned-head button{background:#294650!important;color:#fff!important;border:1px solid #58727b!important;border-radius:9px!important;width:36px;height:34px}
+.my-owned-row{display:flex;justify-content:space-between;gap:12px;align-items:center;background:#223e49;border:1px solid #46616b;border-radius:11px;padding:10px 12px;margin:7px 0}
+.my-owned-row strong{display:block;font-size:15px}.my-owned-row small{opacity:.75;font-size:11px}.my-owned-price{text-align:right;font-size:12px;font-weight:800}
+.my-owned-empty{text-align:center;padding:24px 8px;opacity:.8}
+</style>
 </head>
 <body>
 <div id="lobby" class="lobby-screen">
@@ -1678,7 +1698,7 @@ async function copyGameRoomCode(){
  catch(e){gameNotice('방 코드 '+onlineRoomCode,1600)}
 }
 function showMyLandQuick(){
- const me=localGameIndex(),lands=data.filter(t=>t.owner===me);
+ const me=(gameMode==='friend'?localGameIndex():0),lands=data.filter(t=>t.owner===me);
  document.getElementById('mh').textContent='🏠 내 땅 바로가기';
  document.getElementById('mb').innerHTML=`<div class="my-land-grid">${lands.length?lands.map(t=>`<button data-myland="${t.i}"><b>${escapeHtml(t.name)}</b><br>${t.type==='CITY'?['대지','별장 1채','별장 2채','빌딩','호텔'][t.bld]:'특수 땅'} · ${won(rent(t))}</button>`).join(''):'보유한 땅이 없습니다.'}</div>`;
  const a=document.getElementById('ma');a.innerHTML='';const q=document.createElement('button');q.textContent='닫기';q.onclick=()=>closeGameModal();a.appendChild(q);
@@ -2165,10 +2185,10 @@ function ownedLandBreakdown(owner,perLand){
 }
 
 const GOLDEN_CARDS=[
- {id:'travel',icon:'🚀',name:'세계여행',prob:7,desc:'원하는 지역을 직접 선택해 즉시 이동합니다.',run:async p=>offerWorldTravel(true)},
- {id:'random',icon:'🌀',name:'랜덤 여행',prob:7,desc:'전체 보드 중 한 곳으로 무작위 이동합니다.',run:async p=>{p.pos=Math.floor(Math.random()*40);draw();await land()}},
+ {id:'travel',icon:'🚀',name:'세계여행',prob:4,desc:'원하는 칸을 직접 선택해 즉시 이동합니다. 도시뿐 아니라 무인도·복지기금 같은 특수칸도 선택할 수 있습니다.',run:async p=>offerWorldTravel(true)},
+ {id:'random',icon:'🌀',name:'랜덤 여행',prob:10,desc:'전체 보드 중 한 곳으로 무작위 이동합니다. 도착한 칸의 효과도 즉시 적용됩니다.',run:async p=>{p.pos=Math.floor(Math.random()*40);draw();await land()}},
  {id:'start',icon:'🏁',name:'출발지 이동',prob:5,desc:'출발지로 즉시 이동하고 20만원을 받습니다.',run:async p=>{p.pos=0;p.money+=200000;draw();keyResult('출발지 이동\n+20만원')}},
- {id:'back',icon:'⏪',name:'후진 여행',prob:6,desc:'현재 위치에서 3칸 뒤로 이동합니다.',run:async p=>{p.pos=(p.pos+37)%40;draw();await land()}},
+ {id:'back',icon:'⏪',name:'후진 여행',prob:6,desc:'뒤로 1~6칸을 무작위로 이동하고, 도착한 칸의 효과를 적용합니다.',run:async p=>{const n=1+Math.floor(Math.random()*6);p.pos=(p.pos+40-n)%40;draw();keyResult(`후진 여행: 뒤로 ${n}칸`);gameNotice(`⏪ ${p.name} 뒤로 ${n}칸 이동`,1800);await land()}},
  {id:'fast',icon:'⚡',name:'초고속 여행',prob:6,desc:'현재 위치에서 6칸 앞으로 이동합니다.',run:async p=>{p.pos=(p.pos+6)%40;draw();await land()}},
  {id:'again',icon:'🎲',name:'한 번 더!',prob:6,desc:'현재 턴에서 주사위를 한 번 더 굴릴 수 있습니다.',run:async p=>{dbl=true}},
  {id:'choose',icon:'🎯',name:'숫자 선택',prob:6,desc:'1~6 중 이동할 칸 수를 직접 선택합니다.',run:async p=>chooseGoldenMove(p)},
@@ -2185,18 +2205,18 @@ ${x.text}
 ${x.text}
 총 수익: +${won(x.total)}`);gameNotice(`🏦 투자 수익 +${won(x.total)}`,2200)}},
 
- {id:'freebuild',icon:'🏗️',name:'무료 건설',prob:6,desc:'즉시 발동. 내가 가진 땅을 직접 고른 뒤 원하는 건물 종류를 선택해 비용 없이 건설합니다.',run:async p=>goldenFreeBuild()},
- {id:'wreck',icon:'💥',name:'건물 철거',prob:5,desc:'내가 보유한 건물이 있는 지역 하나가 무작위로 선택되어 그 지역의 건물이 완전히 사라집니다. 땅 소유권은 유지됩니다.',run:async p=>{const a=data.filter(x=>x.owner===turn&&x.bld>0);if(!a.length)return gameNotice('철거할 내 건물이 없습니다.',1500);const t=a[Math.floor(Math.random()*a.length)];t.bld=0;gameNotice(`💥 ${t.name}의 건물이 철거되었습니다.`,1800)}},
- {id:'precision',icon:'💣',name:'정밀 철거',prob:3,desc:'희귀 카드. 상대가 소유한 땅은 건물 유무와 관계없이 선택할 수 있습니다. 선택한 땅의 소유권이 제거되며 건물이 있다면 건물도 함께 사라져 빈 땅으로 돌아갑니다.',run:async p=>goldenPrecisionDemolition()},
+ {id:'freebuild',icon:'🏗️',name:'무료 건설',prob:6,desc:'즉시 발동. 내가 가진 땅을 직접 고른 뒤 원하는 건물 종류를 선택해 0원에 건설합니다. 결과에 도시명과 실제 건물 종류(별장·빌딩·호텔)를 표시합니다.',run:async p=>goldenFreeBuild()},
+ {id:'wreck',icon:'💥',name:'건물 철거',prob:5,desc:'내가 보유한 건물이 있는 지역 하나가 무작위로 선택됩니다. 어느 도시의 어떤 건물(별장·빌딩·호텔)이 철거됐는지 결과에 표시하며, 땅 소유권은 유지됩니다.',run:async p=>{const a=data.filter(x=>x.owner===turn&&x.bld>0);if(!a.length){keyResult('철거할 내 건물이 없어 효과 없음');return}const t=a[Math.floor(Math.random()*a.length)];const before=t.bld;const bn=['대지','별장 1채','별장 2채','빌딩','호텔'][before]||`건물 ${before}단계`;t.bld=0;keyResult(`건물 철거: ${t.name}\n철거 건물: ${bn}\n땅 소유권 유지`);gameNotice(`💥 ${t.name} · ${bn} 철거`,2200)}},
+ {id:'precision',icon:'💣',name:'정밀 철거',prob:3,desc:'희귀 카드. 상대 땅 하나를 직접 선택합니다. 선택한 도시명과 제거된 건물 종류를 표시하고, 건물과 토지 소유권이 모두 사라져 은행 소유 빈 땅이 됩니다.',run:async p=>goldenPrecisionDemolition()},
   {id:'tourdown',icon:'📉',name:'관광객 감소',prob:5,desc:'내 지역 하나의 통행료가 10~30% 영구 감소합니다. 큰 감소율일수록 발생 확률이 낮습니다. (10% 40% / 15% 25% / 20% 18% / 25% 11% / 30% 6%)',run:async p=>{const a=data.filter(x=>x.owner===turn&&(x.type==='CITY'||x.type==='SPECIAL'));if(!a.length){keyResult('보유 지역이 없어 효과 없음');return}const t=a[Math.floor(Math.random()*a.length)];const pct=weightedPick([[10,40],[15,25],[20,18],[25,11],[30,6]]);const before=rent(t);t.rentFactor=(Number.isFinite(t.rentFactor)?t.rentFactor:1)*(1-pct/100);const after=rent(t);keyResult(`${t.name} 관광객 ${pct}% 감소
 통행료 ${won(before)} → ${won(after)}
 감소액 ${won(before-after)}`);gameNotice(`📉 ${t.name} 통행료 ${pct}% 감소`,2200)}},
 
- {id:'fate',icon:'🎰',name:'운명의 열쇠',prob:4,desc:'50% 확률로 +40만원, 아니면 -20만원이 적용됩니다.',run:async p=>{if(Math.random()<.5){p.money+=400000;gameNotice('🎰 행운! +40만원',1500)}else{p.money-=200000;gameNotice('🎰 아쉽다! -20만원',1500)}}},
+ {id:'fate',icon:'🎰',name:'운명의 열쇠',prob:4,desc:'50% 확률로 은행에서 40만원을 받고, 50% 확률로 은행에 20만원을 지불합니다. 실제 결과와 금액을 표시합니다.',run:async p=>{if(Math.random()<.5){p.money+=400000;gameNotice('🎰 행운! +40만원',1500)}else{p.money-=200000;gameNotice('🎰 아쉽다! -20만원',1500)}}},
   {id:'sale',icon:'🏚️',name:'긴급 매각',prob:3,desc:'현재 가치가 가장 높은 내 땅을 은행에 강제로 매각합니다. 카드 아래에 매각 지역과 받은 금액이 표시됩니다.',run:async p=>{const a=data.filter(x=>x.owner===turn);if(!a.length){keyResult('매각할 땅이 없어 효과 없음');return}a.sort((x,y)=>saleValue(y)-saleValue(x));const t=a[0],v=saleValue(t);p.money+=v;t.owner=-1;t.bld=0;t.purchasedLap=-1;t.rentFactor=1;keyResult(`강제 매각: ${t.name}
 매각대금: +${won(v)}`);gameNotice(`🏚️ ${t.name} 강제 매각 · +${won(v)}`,2200)}},
- {id:'pass',icon:'🛂',name:'무료 통행권',prob:4,desc:'보관형 아이템. 상대 지역 통행료를 1회 면제합니다. 무료 토지 매입권과 별개의 아이템입니다.',run:async p=>{p.items=p.items||[];p.items.push('TOLL_PASS');keyResult('🎫 무료 통행권 ×1 보관함에 저장')}},
- {id:'freeland',icon:'🏝️',name:'무료 토지 매입권',prob:4,desc:'보관형 아이템. 보관함에서 사용하면 현재 은행 소유인 땅 중 원하는 곳 하나를 직접 골라 0원에 매입합니다. 건물은 포함되지 않습니다.',run:async p=>{p.items=p.items||[];p.items.push('FREE_LAND');keyResult('🏝️ 무료 토지 매입권 ×1 보관함에 저장')}}
+ {id:'pass',icon:'🛂',name:'무료 통행권',prob:4,desc:'보관형 아이템. 상대 땅에 도착했을 때 통행료를 1회 0원으로 면제합니다. 사용한 도시와 면제된 금액을 표시합니다.',run:async p=>{p.items=p.items||[];p.items.push('TOLL_PASS');keyResult('🎫 무료 통행권 ×1 보관함에 저장')}},
+ {id:'freeland',icon:'🏝️',name:'무료 토지 매입권',prob:4,desc:'보관형 아이템. 은행 소유 땅 하나를 직접 골라 0원에 매입합니다. 사용 후 누가 어느 도시를 매입했는지 모두에게 표시합니다. 건물은 포함되지 않습니다.',run:async p=>{p.items=p.items||[];p.items.push('FREE_LAND');keyResult('🏝️ 무료 토지 매입권 ×1 보관함에 저장')}}
 ];
 
 function pickGoldenCard(){
@@ -2206,10 +2226,20 @@ function pickGoldenCard(){
 }
 async function runGoldenCard(c,testing=false){
  const p=P[turn]; if(!p||!c)return;
+ const _beforeGolden=data.map(t=>({owner:t.owner,bld:t.bld,name:t.name}));
  if(!testing)ensureStats(p).keys++;
  status(`🔑 ${c.icon} ${c.name}`);showKeyReveal(p.name,`${c.icon} ${c.name}`);
  gameNotice(`🔑 ${p.name} · ${c.name}`,1800);log(`${p.name} 황금열쇠: ${c.name}${testing?' [테스트]':''}`);
- await c.run(p);bankrupt(turn);ui();
+ await c.run(p);
+ if(c.id==='freebuild'){
+   const i=data.findIndex((t,j)=>t.owner===turn&&(t.bld||0)>(_beforeGolden[j]?.bld||0));
+   if(i>=0){const t=data[i],bn=['대지','별장 1채','별장 2채','빌딩','호텔'][t.bld]||`건물 ${t.bld}단계`;keyResult(`무료 건설권 사용\n${p.name} · ${t.name}\n건설: ${bn} · 비용 0원`);gameNotice(`🏗️ ${p.name} · ${t.name}에 ${bn} 무료 건설`,2400)}
+ }
+ if(c.id==='precision'){
+   const i=data.findIndex((t,j)=>(_beforeGolden[j]?.owner??-1)>=0&&t.owner<0);
+   if(i>=0){const old=_beforeGolden[i],bn=['대지','별장 1채','별장 2채','빌딩','호텔'][old.bld]||`건물 ${old.bld}단계`;keyResult(`정밀 철거\n${old.name}\n${old.bld?`제거 건물: ${bn}\n`:''}토지 소유권 제거 → 은행 소유`);gameNotice(`💣 ${old.name} 정밀 철거${old.bld?` · ${bn} 제거`:''}`,2400)}
+ }
+ bankrupt(turn);ui();
  if(gameMode==='friend'&&!testing)await pushOnlineGame({goldenKeyEvent:{name:p.name,card:c.name,at:Date.now()}});
 }
 function chooseGoldenMove(p){
@@ -4183,5 +4213,149 @@ document.addEventListener('click',function(ev){
  const tile=typeof data!=='undefined'?data.find(t=>t?.name===name):null;
  if(tile)setTimeout(()=>syncLandInfoColor(tile),0);
 },true);
+</script>
+
+<script id="v139MyLandOwnedOnly">
+function getMyActualPlayerIndex(){
+  if(typeof gameMode!=='undefined' && gameMode==='friend'){
+    if(typeof localGameIndex==='function'){
+      const n=localGameIndex();
+      if(Number.isInteger(n)&&n>=0)return n;
+    }
+    if(typeof onlinePlayerId!=='undefined' && typeof P!=='undefined'){
+      const n=P.findIndex(p=>p&&(p.onlineId===onlinePlayerId||p.id===onlinePlayerId));
+      if(n>=0)return n;
+    }
+  }
+  // AI전의 사람 플레이어는 항상 0번.
+  return 0;
+}
+function openMyLandInfo(){
+  const idx=getMyActualPlayerIndex();
+  const mine=(typeof data!=='undefined'?data:[]).filter(t=>t && Number(t.owner)===idx);
+  let modal=document.getElementById('myOwnedLandModal');
+  if(!modal){
+    modal=document.createElement('div');
+    modal.id='myOwnedLandModal';
+    modal.innerHTML=`<div class="my-owned-card">
+      <div class="my-owned-head"><b>🏠 내 땅</b><button type="button" id="closeMyOwnedLand">✕</button></div>
+      <div id="myOwnedLandBody"></div>
+    </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click',e=>{if(e.target===modal||e.target.id==='closeMyOwnedLand')modal.classList.remove('show')});
+  }
+  const body=modal.querySelector('#myOwnedLandBody');
+  if(!mine.length){
+    body.innerHTML='<div class="my-owned-empty">현재 내가 소유한 땅이 없습니다.</div>';
+  }else{
+    body.innerHTML=mine.map(t=>{
+      const bn=['대지','별장 1채','별장 2채','빌딩','호텔'][Number(t.bld)||0]||'대지';
+      const rent=typeof calcRent==='function'?calcRent(t):((t.rents&&t.rents[t.bld])||0);
+      return `<div class="my-owned-row">
+        <div><strong>${t.name}</strong><small>${bn}</small></div>
+        <div class="my-owned-price">매입 ${typeof won==='function'?won(t.price||0):(t.price||0)}<br><small>통행료 ${typeof won==='function'?won(rent):rent}</small></div>
+      </div>`;
+    }).join('');
+  }
+  modal.classList.add('show');
+}
+document.addEventListener('click',function(e){
+ const b=e.target.closest?.('button');
+ if(!b)return;
+ const txt=(b.textContent||'').replace(/\s+/g,' ').trim();
+ if(txt==='내 땅'||txt.startsWith('내 땅 ')){
+   e.preventDefault();e.stopImmediatePropagation();openMyLandInfo();
+ }
+},true);
+document.addEventListener('touchend',function(e){
+ const b=e.target.closest?.('button');
+ if(!b)return;
+ const txt=(b.textContent||'').replace(/\s+/g,' ').trim();
+ if(txt==='내 땅'||txt.startsWith('내 땅 ')){
+   e.preventDefault();e.stopImmediatePropagation();openMyLandInfo();
+ }
+},{capture:true,passive:false});
+</script>
+
+<script id="v137GameplayFix">
+(()=>{
+ const S={money:[],owner:[],bld:[],factor:[],pos:[],ready:false};
+ const W=n=>typeof won==='function'?won(Math.abs(Number(n)||0)):`${Math.abs(Number(n)||0).toLocaleString()}원`;
+ const N=i=>(typeof P!=='undefined'&&P[i]?.name)||`플레이어 ${i+1}`;
+ function notice(x,ms=2300){try{gameNotice?.(x,ms)}catch(_){} try{log?.(x)}catch(_){}}
+ function snap(){
+  if(typeof P!=='undefined')P.forEach((p,i)=>{S.money[i]=+p.money||0;S.pos[i]=+p.pos||0});
+  if(typeof data!=='undefined')data.forEach((t,i)=>{S.owner[i]=t.owner;S.bld[i]=+t.bld||0;S.factor[i]=+t.rentFactor||1});
+  S.ready=true;
+ }
+ function sound(){
+  try{if(typeof playSfx==='function')return playSfx('move');if(typeof beep==='function'){beep(520,.04);setTimeout(()=>beep(650,.04),70)}}catch(_){}
+ }
+ function diff(){
+  if(!S.ready){snap();return}
+  if(typeof data!=='undefined')data.forEach((t,i)=>{
+   if(S.owner[i]!==t.owner&&t.owner>=0)notice(`🏷️ ${N(t.owner)}이(가) ${t.name}을(를) 매입했습니다.`);
+   if((+t.bld||0)>S.bld[i]&&t.owner>=0)notice(`🏗️ ${N(t.owner)}이(가) ${t.name}에 건물을 건설했습니다.`);
+   if((+t.rentFactor||1)<S.factor[i]){
+    const pct=Math.round((1-(+t.rentFactor||1)/S.factor[i])*100);
+    notice(`📉 관광객 감소 · ${t.name} 통행료 ${pct}% 감소`,2700);
+   }
+  });
+  if(typeof P!=='undefined')P.forEach((p,i)=>{
+   const d=(+p.money||0)-S.money[i];
+   if(d&&Math.abs(d)>=50000)notice(`💰 ${N(i)} ${d>0?'수령':'지불'} ${W(d)} · 잔액 ${W(p.money)}`,1900);
+   if(i!==turn&&S.pos[i]!==+p.pos)sound();
+  });
+  snap();
+ }
+ if(typeof draw==='function'){const od=draw;draw=function(...a){const r=od.apply(this,a);setTimeout(diff,0);return r}}
+
+ window.keyFullDesc=id=>({
+  travel:'세계여행 · 원하는 칸으로 이동. 무인도·복지기금 같은 특수칸도 선택 가능',
+  random:'랜덤 여행 · 임의의 칸으로 이동',
+  start:'출발 이동 · 출발로 이동하고 20만원 수령',
+  back:'후진 여행 · 뒤로 1~6칸 무작위 이동',
+  fast:'고속 이동 · 앞으로 6칸 이동',
+  again:'주사위를 한 번 더 굴림',
+  choose:'1~6칸 중 원하는 이동 거리 선택',
+  support:'지원금 · 30만원 수령',
+  prize:'행운의 상금 · 현재 현금의 20~100% 수령',
+  jackpot:'대박 상금 · 100만원 수령',
+  refund:'세금 환급 · 15만원 수령',
+  tax:'재산세 · 보유 땅 1개당 5만원 지불',
+  invest:'투자 수익 · 보유 땅 1개당 5만원 수령',
+  freebuild:'무료 건설권 · 선택한 내 땅에 건물 1단계 무료 건설. 건설한 도시를 모두에게 표시',
+  wreck:'건물 철거 · 내 건물 한 곳 철거, 땅 소유권은 유지',
+  precision:'정밀 철거 · 선택한 상대 땅의 건물과 소유권 제거',
+  tourdown:'관광객 감소 · 적용된 도시와 통행료 감소율 10~30%를 표시',
+  fate:'운명의 선택 · 50% 40만원 수령 / 50% 20만원 지불',
+  sale:'강제 매각 · 보유한 땅 중 가장 비싼 땅 매각',
+  pass:'통행료 면제권 · 통행료 1회 면제',
+  freeland:'토지 매입권 · 선택한 땅 무료 매입. 매입한 도시를 모두에게 표시'
+ }[id]||'황금열쇠 효과 적용');
+
+ // Legacy fixed back-3 becomes random back 1~6.
+ if(typeof moveBy==='function'){const om=moveBy;moveBy=async function(n,...a){if(+n===-3)n=-(1+Math.floor(Math.random()*6));return om.call(this,n,...a)}}
+
+ // Enable special destinations in world-travel choice UI.
+ function unlock(){
+  document.querySelectorAll('[data-dest],[data-tile-index],.travel-choice button').forEach(b=>{
+   if(/무인도|복지기금|복지회수/.test(b.textContent||'')){b.disabled=false;b.removeAttribute('disabled');b.style.pointerEvents='auto';b.style.opacity='1'}
+  });
+ }
+ document.addEventListener('click',e=>{if((e.target.textContent||'').includes('세계여행'))setTimeout(unlock,0)},true);
+
+ // Final bankruptcy: liquidation may be attempted, but if every owned land's purchase value
+ // still cannot cover negative cash, mark bankruptcy immediately.
+ window.finalBankruptcyCheck=i=>{
+  const p=P?.[i];if(!p||p.bankrupt||(+p.money||0)>=0)return !!p?.bankrupt;
+  const assets=(data||[]).filter(t=>t.owner===i);
+  const value=assets.reduce((a,t)=>a+(+t.price||0),0);
+  if((+p.money||0)+value<0){p.bankrupt=true;notice(`💥 ${p.name} 파산 · 전 재산을 매각해도 채무를 갚을 수 없습니다.`,3000);return true}
+  return false;
+ };
+ if(typeof bankrupt==='function'){const ob=bankrupt;bankrupt=function(i,...a){if(finalBankruptcyCheck(i))return true;return ob.call(this,i,...a)}}
+ snap();
+})();
 </script>
 </body></html>
