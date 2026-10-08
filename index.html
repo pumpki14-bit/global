@@ -1829,7 +1829,7 @@ function renderMyItems(){
  if(!items.length){box.innerHTML='<span class="muted">보유 아이템 없음</span>';return}
  box.innerHTML='';
  items.forEach((it,idx)=>{
-  const b=document.createElement('button');b.className='item-btn';b.textContent=it==='TOLL_PASS'?'🎫 통행료 면제권':it==='FREE_LAND'?'🏝️ 무료 토지 매입권':it;
+  const b=document.createElement('button');b.className='item-btn';b.textContent=it==='TOLL_PASS'?'🎫 통행료 면제권':it==='FREE_LAND'?'🏝️ 무료 토지 매입권':it==='ISLAND_ESCAPE'?'🎟️ 무인도 탈출권':it;
   const mine=me===turn&&!over&&!actionLocked&&!rollLock&&!p.dead;
   b.disabled=!mine;
   b.onclick=()=>useOwnedItem(idx);
@@ -1843,6 +1843,10 @@ async function useOwnedItem(idx){
  // 면제권은 통행료를 내야 하는 순간에 사용한다.
  if(item==='TOLL_PASS')return gameNotice('🎫 면제권은 상대 땅 통행료를 낼 때 사용할 수 있습니다.',1700);
  if(item==='FREE_LAND')return useFreeLandItem(idx);
+ if(item==='ISLAND_ESCAPE'){
+  if(!p.jail)return gameNotice('무인도에 갇혔을 때만 사용할 수 있습니다.',1400);
+  p.items.splice(idx,1);p.jail=0;gameNotice(`🎟️ ${p.name} 무인도 탈출권 사용! 다음 턴부터 이동`,1800);log(`${p.name} 무인도 탈출권 사용`);ui();if(gameMode==='friend')await pushOnlineGame({jailEvent:{name:p.name,left:0,escaped:true,at:Date.now()}});return;
+ }
 }
 function useFreeLandItem(idx){
  const me=localGameIndex(),p=P[me];
@@ -1924,13 +1928,13 @@ function showKeyReveal(playerName,card,detail=''){
  o.innerHTML=`<div class="key-card-big"><div class="key-icon">🔑</div><b>황금열쇠</b><small>${escapeHtml(playerName)} · ${escapeHtml(card)}</small><div id="keyRevealDetail" style="margin-top:8px;font-size:11px;line-height:1.55;color:#111!important;background:#fff;padding:10px;border-radius:9px;font-weight:800;font-size:14px;max-width:260px">${escapeHtml(detail).replace(/\n/g,'<br>')}</div></div>`;
  document.body.appendChild(o);
  clearTimeout(window._keyRevealTimer);
- window._keyRevealTimer=setTimeout(()=>o.remove(),4200);
+ window._keyRevealTimer=setTimeout(()=>o.remove(),1500);
 }
 function keyResult(text){
  const el=document.getElementById('keyRevealDetail');
  if(el)el.innerHTML=escapeHtml(text).replace(/\n/g,'<br>');
  clearTimeout(window._keyRevealTimer);
- window._keyRevealTimer=setTimeout(()=>document.querySelector('.key-reveal')?.remove(),5500);
+ window._keyRevealTimer=setTimeout(()=>document.querySelector('.key-reveal')?.remove(),1500);
 }
 function recordGameHistory(){
  try{
@@ -2186,7 +2190,7 @@ function ownedLandBreakdown(owner,perLand){
 
 const GOLDEN_CARDS=[
  {id:'travel',icon:'🚀',name:'세계여행',prob:4,desc:'원하는 칸을 직접 선택해 즉시 이동합니다. 도시뿐 아니라 무인도·복지기금 같은 특수칸도 선택할 수 있습니다.',run:async p=>offerWorldTravel(true)},
- {id:'random',icon:'🌀',name:'랜덤 여행',prob:10,desc:'전체 보드 중 한 곳으로 무작위 이동합니다. 도착한 칸의 효과도 즉시 적용됩니다.',run:async p=>{p.pos=Math.floor(Math.random()*40);draw();await land()}},
+ {id:'random',icon:'🌀',name:'랜덤 여행',prob:4,desc:'전체 보드 중 한 곳으로 무작위 이동합니다. 도착한 칸의 효과도 즉시 적용됩니다.',run:async p=>{p.pos=Math.floor(Math.random()*40);draw();await land()}},
  {id:'start',icon:'🏁',name:'출발지 이동',prob:5,desc:'출발지로 즉시 이동하고 20만원을 받습니다.',run:async p=>{p.pos=0;p.money+=200000;draw();keyResult('출발지 이동\n+20만원')}},
  {id:'back',icon:'⏪',name:'후진 여행',prob:6,desc:'뒤로 1~6칸을 무작위로 이동하고, 도착한 칸의 효과를 적용합니다.',run:async p=>{const n=1+Math.floor(Math.random()*6);p.pos=(p.pos+40-n)%40;draw();keyResult(`후진 여행: 뒤로 ${n}칸`);gameNotice(`⏪ ${p.name} 뒤로 ${n}칸 이동`,1800);await land()}},
  {id:'fast',icon:'⚡',name:'초고속 여행',prob:6,desc:'앞으로 1~6칸 무작위 이동합니다.',run:async p=>{const n=1+Math.floor(Math.random()*6);p.pos=(p.pos+n)%40;keyResult(`초고속 여행 · 앞으로 ${n}칸`);draw();await land()}},
@@ -2214,6 +2218,7 @@ ${x.text}
   {id:'sale',icon:'🏚️',name:'긴급 매각',prob:3,desc:'현재 가치가 가장 높은 내 땅을 은행에 강제로 매각합니다. 카드 아래에 매각 지역과 받은 금액이 표시됩니다.',run:async p=>{const a=data.filter(x=>x.owner===turn);if(!a.length){keyResult('매각할 땅이 없어 효과 없음');return}a.sort((x,y)=>saleValue(y)-saleValue(x));const t=a[0],v=saleValue(t);p.money+=v;t.owner=-1;t.bld=0;t.purchasedLap=-1;t.rentFactor=1;keyResult(`강제 매각: ${t.name}
 매각대금: +${won(v)}`);gameNotice(`🏚️ ${t.name} 강제 매각 · +${won(v)}`,2200)}},
  {id:'pass',icon:'🛂',name:'무료 통행권',prob:4,desc:'보관형 아이템. 상대 땅에 도착했을 때 통행료를 1회 0원으로 면제합니다. 사용한 도시와 면제된 금액을 표시합니다.',run:async p=>{p.items=p.items||[];p.items.push('TOLL_PASS');keyResult('🎫 무료 통행권 ×1 보관함에 저장')}},
+ {id:'islandEscape',icon:'🎟️',name:'무인도 탈출권',prob:3,desc:'보관형 아이템. 무인도에 갇혔을 때 사용하면 즉시 탈출하고, 다음 주사위부터 정상 이동할 수 있습니다.',run:async p=>{p.items=p.items||[];p.items.push('ISLAND_ESCAPE');keyResult('🎟️ 무인도 탈출권 ×1 보관함에 저장');gameNotice(`${p.name} 무인도 탈출권 획득`,1200)}},
  {id:'islandSummon',icon:'🏝️',name:'무인도 강제 소환',prob:3,desc:'상대 한 명을 선택해 무인도로 보냅니다. 이동하면서 출발 보너스는 받지 않으며, 상대에게 무인도 규칙(최대 3턴)이 적용됩니다.',run:async p=>goldenIslandSummon()},
  {id:'freeland',icon:'🏝️',name:'무료 토지 매입권',prob:4,desc:'보관형 아이템. 은행 소유 땅 하나를 직접 골라 0원에 매입합니다. 사용 후 누가 어느 도시를 매입했는지 모두에게 표시합니다. 건물은 포함되지 않습니다.',run:async p=>{p.items=p.items||[];p.items.push('FREE_LAND');keyResult('🏝️ 무료 토지 매입권 ×1 보관함에 저장')}}
 ];
@@ -2262,7 +2267,7 @@ async function runGoldenCard(c,testing=false){
    if(i>=0){const old=_beforeGolden[i],bn=['대지','별장 1채','별장 2채','빌딩','호텔'][old.bld]||`건물 ${old.bld}단계`;keyResult(`정밀 철거\n${old.name}\n${old.bld?`제거 건물: ${bn}\n`:''}토지 소유권 제거 → 은행 소유`);gameNotice(`💣 ${old.name} 정밀 철거${old.bld?` · ${bn} 제거`:''}`,2400)}
  }
  bankrupt(turn);ui();
- if(gameMode==='friend'&&!testing)await publishGoldenReveal({name:p.name,card:c.name,phase:'result',detail:(document.getElementById('keyRevealDetail')?.innerText||c.desc||''),at:Date.now()});
+ 
 }
 function chooseGoldenMove(p){
  return new Promise(resolve=>{
@@ -3461,14 +3466,14 @@ if(room.kickEvent?.targetId===onlinePlayerId){clearOnlineResume();localStorage.r
    const reveal=room.goldenReveal;
    if(reveal?.nonce&&reveal.nonce!==window._lastGoldenRevealNonce){
      window._lastGoldenRevealNonce=reveal.nonce;
-     if(reveal.name!==P[onlinePlayerIndexFromCurrent()]?.name){
+     if(reveal.phase!=='result'&&reveal.name!==P[onlinePlayerIndexFromCurrent()]?.name){
        showKeyReveal(reveal.name,reveal.card,reveal.detail||'');
        gameNotice(`🔑 ${reveal.name} · ${reveal.card} ${reveal.phase==='draw'?'뽑음':'효과 적용'}`,3200);
      }
    }
    const se=room.game?.surrenderEvent;if(se?.at&&se.at>window._surrenderSeen){window._surrenderSeen=se.at;gameNotice(`🏳️ ${se.name} 항복`,1800)}
       const ke=room.game?.goldenKeyEvent;
-   if(ke?.at&&ke.at>window._keySeen){window._keySeen=ke.at;showKeyReveal(ke.name,ke.card,ke.detail||'');gameNotice(`🔑 ${ke.name} · ${ke.card}${ke.phase==='result'?' · 결과 확정':' · 카드 공개'}`,1800)}
+   if(ke?.at&&ke.at>window._keySeen&&ke.phase!=='result'){window._keySeen=ke.at;showKeyReveal(ke.name,ke.card,ke.detail||'');gameNotice(`🔑 ${ke.name} · ${ke.card}${ke.phase==='result'?' · 결과 확정':' · 카드 공개'}`,1800)}
    const ie=room.game?.itemEvent;
    if(ie?.at&&ie.at>window._itemSeen){window._itemSeen=ie.at;gameNotice(`🎫 ${ie.name} 면제권 사용 · ${ie.land} 통행료 면제`,1800)}
    const te=room.game?.tollEvent;
@@ -4412,7 +4417,7 @@ document.addEventListener('touchend',function(e){
   if((+p.money||0)+value<0){p.bankrupt=true;notice(`💥 ${p.name} 파산 · 전 재산을 매각해도 채무를 갚을 수 없습니다.`,3000);return true}
   return false;
  };
- if(typeof bankrupt==='function'){const ob=bankrupt;bankrupt=function(i,...a){if(finalBankruptcyCheck(i))return true;return ob.call(this,i,...a)}}
+ // Bankruptcy is handled solely by the core bankrupt() and finishBankruptcy() functions.
  snap();
 })();
 </script>
